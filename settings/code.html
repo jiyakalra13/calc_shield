@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-tint": "#ffb868",
+                    "secondary-container": "#474649",
+                    "primary-fixed": "#ffddbb",
+                    "on-primary": "#482900",
+                    "secondary-fixed-dim": "#c8c6c8",
+                    "on-secondary-fixed": "#1b1b1d",
+                    "inverse-on-surface": "#2f3131",
+                    "outline": "#a28d79",
+                    "surface-container-lowest": "#0d0e0f",
+                    "on-tertiary-fixed-variant": "#474649",
+                    "primary-fixed-dim": "#ffb868",
+                    "secondary-fixed": "#e4e2e4",
+                    "surface-bright": "#383939",
+                    "on-error": "#690005",
+                    "on-tertiary-container": "#464648",
+                    "surface-container": "#1e2020",
+                    "on-background": "#e3e2e2",
+                    "surface": "#121414",
+                    "surface-container-highest": "#343535",
+                    "on-surface": "#e3e2e2",
+                    "error-container": "#93000a",
+                    "surface-container-low": "#1a1c1c",
+                    "error": "#ffb4ab",
+                    "tertiary-container": "#b6b4b6",
+                    "on-primary-fixed-variant": "#673d00",
+                    "tertiary-fixed": "#e4e2e4",
+                    "on-secondary-container": "#b6b4b7",
+                    "on-surface-variant": "#dac3ad",
+                    "secondary": "#c8c6c8",
+                    "primary": "#ffc688",
+                    "inverse-surface": "#e3e2e2",
+                    "on-error-container": "#ffdad6",
+                    "outline-variant": "#544433",
+                    "tertiary": "#d2d0d2",
+                    "on-secondary": "#303032",
+                    "on-primary-fixed": "#2b1700",
+                    "inverse-primary": "#885200",
+                    "primary-container": "#ff9f0a",
+                    "background": "#121414",
+                    "on-tertiary-fixed": "#1b1b1d",
+                    "surface-container-high": "#292a2a",
+                    "on-tertiary": "#303032",
+                    "on-secondary-fixed-variant": "#474649",
+                    "tertiary-fixed-dim": "#c8c6c8",
+                    "surface-variant": "#343535",
+                    "on-primary-container": "#673d00",
+                    "surface-dim": "#121414"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter-grid": "12px",
+                    "margin-main": "16px",
+                    "stack-gap": "8px",
+                    "section-padding": "24px"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "caption": ["Inter"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "body-md": ["15px", {"lineHeight": "20px", "letterSpacing": "-0.24px", "fontWeight": "400"}],
+                    "label-sm": ["13px", {"lineHeight": "18px", "letterSpacing": "-0.08px", "fontWeight": "400"}],
+                    "display-lg": ["94px", {"lineHeight": "112px", "letterSpacing": "-0.02em", "fontWeight": "300"}],
+                    "headline-md": ["22px", {"lineHeight": "28px", "letterSpacing": "0.35px", "fontWeight": "600"}],
+                    "headline-lg": ["34px", {"lineHeight": "41px", "letterSpacing": "0.37px", "fontWeight": "700"}],
+                    "caption": ["11px", {"lineHeight": "13px", "letterSpacing": "0.06px", "fontWeight": "500"}],
+                    "body-lg": ["17px", {"lineHeight": "22px", "letterSpacing": "-0.41px", "fontWeight": "400"}],
+                    "label-sm-mobile": ["12px", {"lineHeight": "16px", "letterSpacing": "-0.08px", "fontWeight": "400"}],
+                    "headline-md-mobile": ["17px", {"lineHeight": "22px", "letterSpacing": "0.35px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #000000;
+            color: #e3e2e2;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ios-toggle {
+            position: relative;
+            display: inline-block;
+            width: 51px;
+            height: 31px;
+        }
+        .ios-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #39393D;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 27px;
+            width: 27px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }
+        input:checked + .slider {
+            background-color: #34C759;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .safe-pb {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .safe-pt {
+            padding-top: env(safe-area-inset-top);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-body-md select-none overflow-x-hidden">
+<!-- Top Navigation Bar -->
+<header class="bg-surface/80 dark:bg-surface/80 backdrop-blur-3xl fixed top-0 w-full z-50 border-b-[0.5px] border-outline-variant/30 flex justify-between items-center px-4 h-11 safe-pt box-content">
+<button onclick="window.location.href='../calcshield_calculator/code.html'" class="text-primary dark:text-primary active:opacity-70 transition-opacity active:scale-95 transition-transform duration-100 flex items-center">
+<span class="material-symbols-outlined text-[24px]">chevron_left</span>
+</button>
+<h1 class="font-headline-md-mobile text-headline-md-mobile text-on-surface">Settings</h1>
+<button class="text-primary dark:text-primary active:opacity-70 transition-opacity active:scale-95 transition-transform duration-100">
+<span class="material-symbols-outlined text-[24px]">more_horiz</span>
+</button>
+</header>
+<!-- Main Content -->
+<main class="mt-20 px-4 pb-24">
+<!-- Settings Group 1 -->
+<div class="bg-surface-container rounded-xl overflow-hidden mb-8">
+<!-- Theme -->
+<div class="flex items-center justify-between px-4 py-3 active:bg-surface-container-highest transition-colors cursor-pointer group">
+<div class="flex items-center gap-3">
+<div class="w-7 h-7 rounded-lg bg-[#333] flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px] text-white">dark_mode</span>
+</div>
+<span class="text-on-surface font-body-lg">Theme</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-secondary text-body-md">Dark</span>
+<span class="material-symbols-outlined text-outline-variant text-[20px]">chevron_right</span>
+</div>
+</div>
+<div class="h-[0.5px] bg-outline-variant/30 ml-14"></div>
+<!-- Display Mode -->
+<div class="flex items-center justify-between px-4 py-3 active:bg-surface-container-highest transition-colors cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="w-7 h-7 rounded-lg bg-[#007AFF] flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px] text-white">aspect_ratio</span>
+</div>
+<span class="text-on-surface font-body-lg">Display Mode</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-secondary text-body-md">Standard</span>
+<span class="material-symbols-outlined text-outline-variant text-[20px]">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Settings Group 2 (Toggles) -->
+<div class="bg-surface-container rounded-xl overflow-hidden mb-8">
+<!-- Calculator History -->
+<div class="flex items-center justify-between px-4 py-2.5">
+<div class="flex items-center gap-3">
+<div class="w-7 h-7 rounded-lg bg-[#FF9500] flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px] text-white">history</span>
+</div>
+<span class="text-on-surface font-body-lg">Calculator History</span>
+</div>
+<label class="ios-toggle">
+<input checked="" type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
+<div class="h-[0.5px] bg-outline-variant/30 ml-14"></div>
+<!-- Haptic Feedback -->
+<div class="flex items-center justify-between px-4 py-2.5">
+<div class="flex items-center gap-3">
+<div class="w-7 h-7 rounded-lg bg-[#4CD964] flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px] text-white">vibration</span>
+</div>
+<span class="text-on-surface font-body-lg">Haptic Feedback</span>
+</div>
+<label class="ios-toggle">
+<input checked="" type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
+</div>
+<!-- Settings Group 3 -->
+<div class="bg-surface-container rounded-xl overflow-hidden mb-8">
+<!-- About -->
+<div class="flex items-center justify-between px-4 py-3 active:bg-surface-container-highest transition-colors cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="w-7 h-7 rounded-lg bg-[#8E8E93] flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px] text-white">info</span>
+</div>
+<span class="text-on-surface font-body-lg">About</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant text-[20px]">chevron_right</span>
+</div>
+<div class="h-[0.5px] bg-outline-variant/30 ml-14"></div>
+<!-- App Version -->
+<div class="flex items-center justify-between px-4 py-3">
+<div class="flex items-center gap-3">
+<div class="w-7 h-7 rounded-lg bg-[#34C759] flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px] text-white">terminal</span>
+</div>
+<span class="text-on-surface font-body-lg">App Version</span>
+</div>
+<span class="text-secondary text-body-md">2.4.1 (64-bit)</span>
+</div>
+</div>
+<!-- System Banner -->
+<div class="flex flex-col items-center gap-2 opacity-40 mt-12">
+<div class="w-16 h-16 bg-surface-container-highest rounded-2xl flex items-center justify-center shadow-inner">
+<span class="material-symbols-outlined text-[40px] text-secondary">calculate</span>
+</div>
+<p class="text-caption font-caption tracking-widest uppercase">CalcShield Professional</p>
+<p class="text-[10px] text-secondary">© 2024 Apple Inc. All rights reserved.</p>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center h-16 px-6 bg-surface/80 dark:bg-surface/80 backdrop-blur-3xl border-t-[0.5px] border-outline-variant/30 pb-safe">
+<button class="flex flex-col items-center gap-1 text-secondary dark:text-secondary active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined text-[24px]">calculate</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-secondary dark:text-secondary active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined text-[24px]">history</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-secondary dark:text-secondary active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined text-[24px]">security</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary-container dark:text-primary-container active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">settings</span>
+</button>
+</nav>
+<script>
+        // Haptic feedback simulation
+        document.querySelectorAll('button, .ios-toggle input, .active\\:bg-surface-container-highest').forEach(el => {
+            el.addEventListener('click', () => {
+                if (window.navigator.vibrate) {
+                    window.navigator.vibrate(10);
+                }
+            });
+        });
+
+        // Toggle logic visual feedback
+        document.querySelectorAll('.ios-toggle input').forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const parent = this.closest('div');
+                if (this.checked) {
+                    console.log('Feature enabled');
+                } else {
+                    console.log('Feature disabled');
+                }
+            });
+        });
+    </script>
+</body></html>

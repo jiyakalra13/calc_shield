@@ -1,0 +1,23 @@
+{
+  "name": "stitch-calcshield-stealth-calculator",
+  "version": "1.0.0",
+  "description": "CalcShield - A high-fidelity iOS-styled Stealth Calculator with silent emergency SOS features, mock calling, dynamic maps, location message drafting, and stealth background audio recording.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "calculator",
+    "stealth",
+    "sos",
+    "ios",
+    "utility",
+    "security"
+  ],
+  "author": "Antigravity Pair Programming",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
