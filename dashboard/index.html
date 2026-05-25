@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>SilentSignal - Emergency Dispatch Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <!-- Leaflet.js Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body {
+            background-color: #0b0c10;
+            color: #c5c6c7;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        .dashboard-glass {
+            background: rgba(26, 27, 30, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .glow-red {
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+            border-color: rgba(239, 68, 68, 0.6);
+        }
+        /* Leaflet custom map */
+        #map {
+            border-radius: 12px;
+            background: #111 !important;
+        }
+        .user-marker {
+            width: 14px;
+            height: 14px;
+            background: #ef4444;
+            border: 2px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ef4444;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+        /* Red Vignette warning during Danger level */
+        .danger-vig {
+            box-shadow: inset 0 0 60px rgba(239, 68, 68, 0.3);
+            animation: pulse-vig 2s infinite ease-in-out;
+        }
+        @keyframes pulse-vig {
+            0%, 100% { box-shadow: inset 0 0 60px rgba(239, 68, 68, 0.2); }
+            50% { box-shadow: inset 0 0 90px rgba(239, 68, 68, 0.45); }
+        }
+    </style>
+</head>
+<body id="dash-body" class="min-h-screen flex flex-col transition-all duration-300">
+    <!-- Header -->
+    <header class="w-full py-4 px-6 bg-neutral-950/80 border-b border-white/10 flex justify-between items-center z-50">
+        <div class="flex items-center gap-3">
+            <div class="bg-red-500/20 p-2 rounded-lg flex items-center justify-center border border-red-500/40">
+                <span class="material-symbols-outlined text-red-500" style="font-variation-settings: 'FILL' 1;">security</span>
+            </div>
+            <div>
+                <h1 class="text-white font-bold text-[18px] tracking-wide">SilentSignal Dispatch</h1>
+                <p class="text-[11px] text-[#66fcf1] uppercase tracking-wider font-semibold">Decrypted Distress Tracking Network</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4 text-[13px]">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-ping"></span>
+                <span class="text-white/80 font-medium">Sockets: Connected</span>
+            </div>
+            <div class="h-6 w-[0.5px] bg-white/10"></div>
+            <button onclick="window.location.reload()" class="bg-neutral-900 border border-white/10 text-white hover:bg-white/5 active:scale-95 transition-all px-3 py-1.5 rounded-lg flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">sync</span>
+                Reload
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Section -->
+    <main class="flex-1 p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-full">
+        <!-- Column 1: Map Tracking -->
+        <div class="lg:col-span-2 flex flex-col gap-6">
+            <!-- Map Card -->
+            <div class="dashboard-glass rounded-2xl p-4 flex-1 flex flex-col min-h-[480px]">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-white font-bold text-[15px] flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px] text-red-500">map</span>
+                        Live GPS Coordinate Breadcrumb
+                    </h2>
+                    <span id="coord-label" class="text-[12px] bg-white/5 px-2.5 py-1 rounded text-white/50">Fetching user positions...</span>
+                </div>
+                <!-- Leaflet container -->
+                <div id="map" class="flex-1 w-full z-10 border border-white/5 shadow-inner"></div>
+            </div>
+
+            <!-- Telemetry Logs / Sockets Stream -->
+            <div class="dashboard-glass rounded-2xl p-4 h-[240px] flex flex-col">
+                <h2 class="text-white font-bold text-[15px] mb-3 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px] text-green-500">terminal</span>
+                    AES-256 Telemetry Obfuscator Stream (Live Decryption)
+                </h2>
+                <div id="terminal-logs" class="flex-1 bg-black/60 rounded-xl p-3 font-mono text-[11px] overflow-y-auto flex flex-col gap-2 border border-white/5">
+                    <div class="text-white/40">// Listening for encrypted socket distress telemetry packets...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Column 2: Distress Metrics & Evidence Vault -->
+        <div class="flex flex-col gap-6">
+            <!-- Alert Panel / Client Metrics -->
+            <div id="metric-card" class="dashboard-glass rounded-2xl p-5 flex flex-col gap-4">
+                <h2 class="text-white font-bold text-[15px] flex items-center gap-2 pb-2 border-b border-white/5">
+                    <span class="material-symbols-outlined text-[18px] text-yellow-500">sensors</span>
+                    Distress Telemetry Metrics
+                </h2>
+
+                <div class="grid grid-cols-2 gap-3.5">
+                    <!-- Threat Level -->
+                    <div class="bg-black/20 rounded-xl p-3 border border-white/5 flex flex-col gap-1">
+                        <span class="text-[11px] text-white/40 uppercase font-semibold">AI Threat Level</span>
+                        <span id="threat-lbl" class="text-[16px] text-green-500 font-bold">NORMAL (GREEN)</span>
+                    </div>
+                    <!-- Speed -->
+                    <div class="bg-black/20 rounded-xl p-3 border border-white/5 flex flex-col gap-1">
+                        <span class="text-[11px] text-white/40 uppercase font-semibold">Velocity (mph)</span>
+                        <span id="speed-lbl" class="text-[16px] text-white font-bold">0.0 mph</span>
+                    </div>
+                    <!-- Battery -->
+                    <div class="bg-black/20 rounded-xl p-3 border border-white/5 flex flex-col gap-1">
+                        <span class="text-[11px] text-white/40 uppercase font-semibold">Device Battery</span>
+                        <span id="battery-lbl" class="text-[16px] text-white font-bold">100%</span>
+                    </div>
+                    <!-- Connection -->
+                    <div class="bg-black/20 rounded-xl p-3 border border-white/5 flex flex-col gap-1">
+                        <span class="text-[11px] text-white/40 uppercase font-semibold">Connection Channel</span>
+                        <span id="channel-lbl" class="text-[15px] text-[#66fcf1] font-semibold">WebSocket Sec</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Evidence Vault (Stealth Recordings) -->
+            <div class="dashboard-glass rounded-2xl p-5 flex-1 flex flex-col min-h-[380px]">
+                <h2 class="text-white font-bold text-[15px] flex items-center gap-2 pb-2 border-b border-white/5 mb-4">
+                    <span class="material-symbols-outlined text-[18px] text-[#ff9f0a]">folder_zip</span>
+                    Silent Evidence Vault (Recordings)
+                </h2>
+
+                <!-- Playback canvas visualizer -->
+                <div class="h-16 w-full bg-black/40 rounded-xl border border-white/5 relative overflow-hidden mb-4 flex items-center justify-center">
+                    <canvas id="audio-canvas" class="absolute inset-0 w-full h-full opacity-60"></canvas>
+                    <span id="visualizer-status" class="text-[11px] font-mono text-white/30 z-10 select-none">// Visualizer Idle</span>
+                </div>
+
+                <!-- Scroll List of recordings -->
+                <div id="recording-vault-list" class="flex-1 overflow-y-auto flex flex-col gap-3 max-h-[220px] pr-1">
+                    <div class="text-center text-white/30 text-[12px] py-8 font-mono">No recordings logged yet.</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Leaflet & WebSocket Logic -->
+    <script>
+        let map = null;
+        let polyline = null;
+        let userMarker = null;
+        let pathTrail = [];
+        
+        let visualizerFrame = null;
+        let audioContext = null;
+        let currentPlayingAudio = null;
+
+        window.addEventListener('load', () => {
+            // 1. Initialize Dashboard Leaflet Map
+            initDashboardMap();
+
+            // 2. Establish WebSockets listener
+            connectDashboardWebSocket();
+
+            // 3. Load initial recordings
+            syncVaultRecordings();
+        });
+
+        function initDashboardMap() {
+            // Start centered on standard default location, gets adjusted immediately on first WebSocket packet
+            map = L.map('map', {
+                center: [37.7749, -122.4194],
+                zoom: 14,
+                zoomControl: true
+            });
+
+            // CartoDB Dark Matter tile layer
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: ''
+            }).addTo(map);
+
+            // Red user marker represent victim
+            const redIcon = L.divIcon({
+                className: 'user-marker',
+                iconSize: [14, 14],
+                iconAnchor: [7, 7]
+            });
+            userMarker = L.marker([37.7749, -122.4194], { icon: redIcon }).addTo(map);
+
+            // Polyline tracking path trail
+            polyline = L.polyline(pathTrail, {
+                color: '#ef4444',
+                weight: 3,
+                opacity: 0.75
+            }).addTo(map);
+        }
+
+        function connectDashboardWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}`;
+            
+            const socket = new WebSocket(wsUrl);
+
+            socket.onopen = () => {
+                logTerminal('SYSTEM', 'WS Dispatch Connection Established.');
+            };
+
+            socket.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === 'INITIAL_STATE') {
+                        logTerminal('SYSTEM', `Loaded ${data.sessions.length} active monitoring channels.`);
+                        if (data.sessions.length > 0) {
+                            handleTelemetryPacket(data.sessions[0]);
+                        }
+                    } else if (data.type === 'TELEMETRY_UPDATE') {
+                        // Display both the raw encrypted payload and decrypted packet in terminal
+                        if (data.encryptedPayload) {
+                            logTerminal('AES-256', data.encryptedPayload);
+                        }
+                        handleTelemetryPacket(data.telemetry);
+                    } else if (data.type === 'NEW_RECORDING') {
+                        logTerminal('VAULT', `New silent recording received from device: ${data.recording.filename}`);
+                        syncVaultRecordings();
+                    }
+
+                } catch(e) {
+                    console.error('WS message error:', e);
+                }
+            };
+
+            socket.onerror = (err) => {
+                logTerminal('ERROR', `WebSocket error: ${err.message || 'connection failed'}`);
+            };
+
+            socket.onclose = () => {
+                logTerminal('SYSTEM', 'WS Sockets disconnected. Attempting retry...');
+                setTimeout(connectDashboardWebSocket, 5000);
+            };
+        }
+
+        function handleTelemetryPacket(telemetry) {
+            if (!telemetry || !telemetry.latitude) return;
+
+            const lat = telemetry.latitude;
+            const lon = telemetry.longitude;
+            const pos = [lat, lon];
+
+            // Update Map
+            userMarker.setLatLng(pos);
+            
+            // Avoid adding identical consecutive points
+            if (pathTrail.length === 0 || pathTrail[pathTrail.length - 1][0] !== lat || pathTrail[pathTrail.length - 1][1] !== lon) {
+                pathTrail.push(pos);
+                polyline.setLatLngs(pathTrail);
+            }
+
+            // Adjust bounds/center
+            map.panTo(pos);
+
+            // Log decrypted JSON payload to terminal
+            logTerminal('JSON_DECRYPT', JSON.stringify(telemetry, null, 2));
+
+            // Update UI card metrics
+            document.getElementById('coord-label').innerText = `GPS: ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+            
+            // Threat Indicator Escalations
+            const threatLbl = document.getElementById('threat-lbl');
+            const alertCard = document.getElementById('metric-card');
+            const dashBody = document.getElementById('dash-body');
+            
+            threatLbl.innerText = `${telemetry.threatLevel.toUpperCase()} (${telemetry.threatLevel === 'Green' ? 'NORMAL' : telemetry.threatLevel === 'Yellow' ? 'SUSPICIOUS' : telemetry.threatLevel === 'Orange' ? 'DANGEROUS' : 'CRITICAL'})`;
+
+            // Style based on threats
+            if (telemetry.threatLevel === 'Green') {
+                threatLbl.className = 'text-[16px] text-green-500 font-bold';
+                alertCard.className = 'dashboard-glass rounded-2xl p-5 flex flex-col gap-4 transition-all duration-300';
+                dashBody.className = 'min-h-screen flex flex-col transition-all duration-300';
+            } else if (telemetry.threatLevel === 'Yellow') {
+                threatLbl.className = 'text-[16px] text-yellow-500 font-bold';
+                alertCard.className = 'dashboard-glass rounded-2xl p-5 flex flex-col gap-4 transition-all duration-300 border-yellow-500/30 shadow-lg shadow-yellow-500/10';
+                dashBody.className = 'min-h-screen flex flex-col transition-all duration-300';
+            } else if (telemetry.threatLevel === 'Orange') {
+                threatLbl.className = 'text-[16px] text-orange-500 font-bold';
+                alertCard.className = 'dashboard-glass rounded-2xl p-5 flex flex-col gap-4 transition-all duration-300 border-orange-500/50 shadow-lg shadow-orange-500/20';
+                dashBody.className = 'min-h-screen flex flex-col transition-all duration-300';
+            } else if (telemetry.threatLevel === 'Red') {
+                threatLbl.className = 'text-[16px] text-red-500 font-bold';
+                alertCard.className = 'dashboard-glass rounded-2xl p-5 flex flex-col gap-4 transition-all duration-300 border-red-500 glow-red';
+                dashBody.className = 'min-h-screen flex flex-col transition-all duration-300 danger-vig';
+            }
+
+            // Speed and Battery gauge sync
+            const speedMph = (telemetry.speed || 0) * 2.23694;
+            const speedEl = document.getElementById('speed-lbl');
+            speedEl.innerText = `${speedMph.toFixed(1)} mph`;
+            if (speedMph > 15) {
+                speedEl.className = 'text-[16px] text-red-500 font-bold animate-pulse';
+            } else {
+                speedEl.className = 'text-[16px] text-white font-bold';
+            }
+
+            document.getElementById('battery-lbl').innerText = `${Math.round(telemetry.battery * 100)}%`;
+        }
+
+        function logTerminal(prefix, content) {
+            const term = document.getElementById('terminal-logs');
+            const logItem = document.createElement('div');
+            logItem.className = 'flex flex-col mb-1 border-b border-white/5 pb-1';
+            
+            const timestamp = new Date().toLocaleTimeString();
+            let color = 'text-white/40';
+            if (prefix === 'AES-256') color = 'text-yellow-500 font-bold';
+            if (prefix === 'JSON_DECRYPT') color = 'text-green-400';
+            if (prefix === 'SYSTEM') color = 'text-blue-400';
+            if (prefix === 'VAULT') color = 'text-orange-400';
+
+            logItem.innerHTML = `
+                <div class="flex items-center justify-between text-[10px] text-white/30 select-all mb-0.5">
+                    <span>[${timestamp}] [TYPE: ${prefix}]</span>
+                    <span>LENGTH: ${content.length}b</span>
+                </div>
+                <pre class="${color} whitespace-pre-wrap select-all font-mono leading-tight">${content}</pre>
+            `;
+            term.appendChild(logItem);
+            term.scrollTop = term.scrollHeight;
+        }
+
+        // Vault list synchronization
+        function syncVaultRecordings() {
+            const container = document.getElementById('recording-vault-list');
+            fetch('/api/recordings')
+                .then(res => res.json())
+                .then(recs => {
+                    container.innerHTML = "";
+                    if (recs.length === 0) {
+                        container.innerHTML = `<div class="text-center text-white/30 text-[12px] py-8 font-mono">No recordings logged yet.</div>`;
+                        return;
+                    }
+
+                    recs.forEach(rec => {
+                        const row = document.createElement('div');
+                        row.className = "flex justify-between items-center bg-white/5 border border-white/5 p-3 rounded-xl hover:bg-white/10 transition-all";
+                        row.innerHTML = `
+                            <div class="flex flex-col gap-0.5">
+                                <span class="text-white text-[13px] font-semibold">${rec.filename.substring(10,25)}...</span>
+                                <span class="text-[11px] text-white/40">${rec.timestamp}</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-[11px] text-white/30 font-mono">${(rec.size / 1024).toFixed(1)} KB</span>
+                                <button onclick="playDashboardAudio('${rec.url}', this)" class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white active:scale-90 transition-transform shadow-md">
+                                    <span class="material-symbols-outlined text-[16px]">play_arrow</span>
+                                </button>
+                            </div>
+                        `;
+                        container.appendChild(row);
+                    });
+                })
+                .catch(err => {
+                    console.error('Vault load failed:', err);
+                });
+        }
+
+        // Dashboard base64 audio player with Web Audio visualizer canvas animations
+        function playDashboardAudio(url, btn) {
+            const icon = btn.querySelector('.material-symbols-outlined');
+            const canvas = document.getElementById('audio-canvas');
+            const statusText = document.getElementById('visualizer-status');
+
+            if (currentPlayingAudio && currentPlayingAudio.src === window.location.origin + url) {
+                if (currentPlayingAudio.paused) {
+                    currentPlayingAudio.play();
+                    icon.innerText = "pause";
+                    statusText.innerText = "// Tracking Audio Signal...";
+                    animateSpectrum(canvas);
+                } else {
+                    currentPlayingAudio.pause();
+                    icon.innerText = "play_arrow";
+                    statusText.innerText = "// Visualizer Suspended";
+                    cancelAnimationFrame(visualizerFrame);
+                }
+                return;
+            }
+
+            if (currentPlayingAudio) {
+                currentPlayingAudio.pause();
+                const playingBtns = document.querySelectorAll('button[onclick^="playDashboardAudio"]');
+                playingBtns.forEach(b => b.querySelector('.material-symbols-outlined').innerText = "play_arrow");
+                cancelAnimationFrame(visualizerFrame);
+            }
+
+            currentPlayingAudio = new Audio(url);
+            icon.innerText = "pause";
+            statusText.innerText = "// Tracking Audio Signal...";
+
+            currentPlayingAudio.play();
+            animateSpectrum(canvas);
+
+            currentPlayingAudio.onended = () => {
+                icon.innerText = "play_arrow";
+                statusText.innerText = "// Visualizer Idle";
+                cancelAnimationFrame(visualizerFrame);
+                currentPlayingAudio = null;
+                // Clear canvas
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0,0, canvas.width, canvas.height);
+            };
+        }
+
+        function animateSpectrum(canvas) {
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.parentElement.offsetWidth;
+            canvas.height = 64;
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw cool neon soundwaves representing sound telemetry
+                const barWidth = 4;
+                const gap = 2;
+                const numBars = Math.floor(canvas.width / (barWidth + gap));
+                
+                // Create neon gradient
+                const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
+                gradient.addColorStop(0, '#ff9f0a');
+                gradient.addColorStop(0.5, '#ef4444');
+                gradient.addColorStop(1, '#ff6b6b');
+
+                ctx.fillStyle = gradient;
+
+                for (let i = 0; i < numBars; i++) {
+                    // Simple random amplitude calculations for mock spectrum analysis
+                    const amplitude = Math.random() * (canvas.height - 8) + 4;
+                    const x = i * (barWidth + gap);
+                    const y = canvas.height - amplitude;
+                    ctx.fillRect(x, y, barWidth, amplitude);
+                }
+                
+                visualizerFrame = requestAnimationFrame(draw);
+            }
+            draw();
+        }
+    </script>
+</body>
+</html>

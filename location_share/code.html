@@ -3,9 +3,13 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+    <title>iMessage - Live Tracking</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Leaflet.js Map Assets -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script id="tailwind-config">
       tailwind.config = {
         darkMode: "class",
@@ -65,187 +69,273 @@
                     "lg": "0.5rem",
                     "xl": "0.75rem",
                     "full": "9999px"
-            },
-            "spacing": {
-                    "gutter-grid": "12px",
-                    "margin-main": "16px",
-                    "stack-gap": "8px",
-                    "section-padding": "24px"
-            },
-            "fontFamily": {
-                    "body-md": ["Inter"],
-                    "label-sm": ["Inter"],
-                    "display-lg": ["Inter"],
-                    "headline-md": ["Inter"],
-                    "headline-lg": ["Inter"],
-                    "caption": ["Inter"],
-                    "body-lg": ["Inter"]
-            },
-            "fontSize": {
-                    "body-md": ["15px", {"lineHeight": "20px", "letterSpacing": "-0.24px", "fontWeight": "400"}],
-                    "label-sm": ["13px", {"lineHeight": "18px", "letterSpacing": "-0.08px", "fontWeight": "400"}],
-                    "display-lg": ["94px", {"lineHeight": "112px", "letterSpacing": "-0.02em", "fontWeight": "300"}],
-                    "headline-md": ["22px", {"lineHeight": "28px", "letterSpacing": "0.35px", "fontWeight": "600"}],
-                    "headline-lg": ["34px", {"lineHeight": "41px", "letterSpacing": "0.37px", "fontWeight": "700"}],
-                    "caption": ["11px", {"lineHeight": "13px", "letterSpacing": "0.06px", "fontWeight": "500"}],
-                    "body-lg": ["17px", {"lineHeight": "22px", "letterSpacing": "-0.41px", "fontWeight": "400"}]
             }
-          },
-        },
+          }
+        }
       }
     </script>
     <style>
-        body { background-color: #000000; color: #ffffff; -webkit-font-smoothing: antialiased; }
-        .ios-blur { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-        .message-bubble { position: relative; border-radius: 20px; padding: 12px 16px; max-width: 75%; font-family: 'Inter', sans-serif; }
+        body { background-color: #000000; color: #ffffff; -webkit-font-smoothing: antialiased; user-select: none; }
+        .phone-frame {
+            width: 393px;
+            height: 852px;
+            background: #000;
+            border-radius: 54px;
+            position: relative;
+            box-shadow: 0 0 0 11px #1f1f1f, 0 0 0 13px #333, 0 20px 50px rgba(0,0,0,0.5);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            margin: auto;
+        }
+        .dynamic-island {
+            width: 120px;
+            height: 35px;
+            background: #000;
+            border-radius: 20px;
+            position: absolute;
+            top: 11px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+        .message-bubble { position: relative; border-radius: 20px; padding: 12px 16px; max-width: 75%; font-family: 'Inter', sans-serif; word-wrap: break-word; }
         .bubble-right { background-color: #34C759; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
-        .bubble-left { background-color: #333333; color: white; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .bubble-left { background-color: #252528; color: white; align-self: flex-start; border-bottom-left-radius: 4px; }
         
-        /* Pulse Animation for Map */
-        @keyframes pulse {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(52, 199, 89, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); }
+        /* Bouncing Dots Typing Animation */
+        .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 12px 16px; }
+        .typing-dot { width: 7px; height: 7px; background-color: #a2a2a2; border-radius: 50%; animation: bounce 1.3s infinite ease-in-out; }
+        .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-4px); }
         }
-        .user-pulse {
-            width: 12px; height: 12px; background: #007AFF; border: 2px solid white; border-radius: 50%;
-            box-shadow: 0 0 0 rgba(0, 122, 255, 0.4); animation: pulse-blue 2s infinite;
-        }
-        @keyframes pulse-blue {
-            0% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(0, 122, 255, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0); }
-        }
-    </style>
-    <style>
-        body {
-            min-height: max(884px, 100dvh);
-        }
+
+        /* Leaflet mini-map modifications */
+        .leaflet-control-zoom, .leaflet-control-attribution { display: none !important; }
+        .leaflet-container { background: #121212 !important; }
     </style>
 </head>
-<body class="flex flex-col h-screen overflow-hidden">
-    <!-- Top App Bar -->
-    <header class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-3xl border-b-[0.5px] border-outline-variant/30 flex justify-between items-center px-4 h-14">
-        <div onclick="window.location.href='../emergency_settings/code.html'" class="flex items-center gap-1 text-primary active:opacity-70 transition-opacity cursor-pointer">
-            <span class="material-symbols-outlined text-[28px]">chevron_left</span>
-            <span class="font-body-lg text-body-lg">Back</span>
-        </div>
-        <div class="flex flex-col items-center">
-            <div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center mb-0.5">
-                <span class="material-symbols-outlined text-[20px] text-on-surface">person</span>
-            </div>
-            <span id="header-contact-name" class="font-caption text-caption text-on-surface">Sarah Miller</span>
-        </div>
-        <div class="text-primary active:opacity-70 transition-opacity cursor-pointer">
-            <span class="material-symbols-outlined text-[24px]">info</span>
-        </div>
-    </header>
+<body class="flex items-center justify-center min-h-screen bg-neutral-950">
+    <div class="phone-frame">
+        <!-- Dynamic Island -->
+        <div class="dynamic-island pointer-events-none"></div>
 
-    <!-- Chat Canvas -->
-    <main class="flex-1 overflow-y-auto px-4 pt-20 pb-24 flex flex-col gap-4">
-        <div class="text-center py-4">
-            <span class="font-caption text-caption text-secondary uppercase tracking-widest">Today 9:41 AM</span>
-        </div>
-        <!-- Incoming Message -->
-        <div class="message-bubble bubble-left">
-            <p class="font-body-md text-body-md">Are you okay? Where are you?</p>
-        </div>
-        <!-- Outgoing Live Location Message -->
-        <div class="flex flex-col items-end gap-1 w-full">
-            <div class="message-bubble bubble-right w-[280px] p-0 overflow-hidden shadow-lg border border-white/10">
-                <!-- Map Preview Card -->
-                <div class="relative h-48 w-full bg-surface-container-highest overflow-hidden">
-                    <div class="absolute inset-0 bg-[#121212] flex items-center justify-center">
-                        <div class="absolute inset-0 opacity-40 mix-blend-screen pointer-events-none" style="background-image: radial-gradient(circle at 50% 50%, #222 1px, transparent 1px); background-size: 20px 20px;"></div>
-                        <div class="user-pulse z-10"></div>
-                        <div class="absolute bottom-2 left-2 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-medium text-white/80">
-                            Legal
-                        </div>
+        <!-- Top App Bar -->
+        <header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-3xl border-b-[0.5px] border-outline-variant/30 flex justify-between items-center px-6 h-14 box-content pt-4">
+            <div onclick="window.location.href='../emergency_settings/code.html'" class="flex items-center gap-1 text-primary active:opacity-70 transition-opacity cursor-pointer">
+                <span class="material-symbols-outlined text-[28px]">chevron_left</span>
+                <span class="font-body-lg text-[16px]">Back</span>
+            </div>
+            <div class="flex flex-col items-center mr-6">
+                <div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center mb-0.5">
+                    <span class="material-symbols-outlined text-[20px] text-on-surface">person</span>
+                </div>
+                <span id="header-contact-name" class="text-[11px] font-semibold text-on-surface">Sarah Miller</span>
+            </div>
+            <div class="text-primary active:opacity-70 transition-opacity cursor-pointer">
+                <span class="material-symbols-outlined text-[22px]">info</span>
+            </div>
+        </header>
+
+        <!-- Chat Canvas -->
+        <main id="chat-messages" class="flex-1 overflow-y-auto px-4 pt-24 pb-20 flex flex-col gap-4">
+            <div class="text-center py-2">
+                <span id="chat-timestamp" class="text-[11px] font-semibold text-secondary uppercase tracking-widest">Today 9:41 AM</span>
+            </div>
+            
+            <!-- Incoming Message -->
+            <div class="message-bubble bubble-left">
+                <p class="text-[15px] leading-snug">Are you okay? Where are you?</p>
+            </div>
+
+            <!-- Outgoing Live Location Message Container -->
+            <div id="live-location-container" class="flex flex-col items-end gap-1 w-full">
+                <div class="message-bubble bubble-right w-[270px] p-0 overflow-hidden shadow-lg border border-white/10 flex flex-col">
+                    <!-- Map Preview Card -->
+                    <div id="mini-map" class="h-44 w-full bg-neutral-900 overflow-hidden z-10"></div>
+                    <!-- Message Text -->
+                    <div class="p-3 bg-[#34C759]">
+                        <p id="bubble-text" class="text-[14px] text-white leading-snug">
+                            Emergency! Here is my live location: <a id="location-url" href="#" target="_blank" class="underline font-semibold break-all text-blue-100">Loading...</a>
+                        </p>
                     </div>
                 </div>
-                <!-- Message Text -->
-                <div class="p-3 bg-primary-container">
-                    <p id="bubble-text" class="font-body-md text-body-md text-on-primary-container leading-snug">
-                        Emergency! Here is my live location: <span class="underline">Location Link</span>
-                    </p>
-                </div>
+                <span id="delivered-status" class="text-[11px] text-white/40 pr-1">Sending...</span>
             </div>
-            <span id="delivered-status" class="font-caption text-caption text-secondary pr-1">Delivered</span>
-        </div>
-    </main>
+        </main>
 
-    <!-- Bottom Input Bar (iOS Style) -->
-    <footer class="fixed bottom-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-3xl border-t-[0.5px] border-outline-variant/30 pb-safe">
-        <div class="flex items-end gap-2 px-3 py-2 max-w-full">
-            <button class="mb-1 p-1 text-on-surface-variant active:scale-90 transition-transform">
-                <span class="material-symbols-outlined">add_circle</span>
-            </button>
-            <!-- Message Input Area -->
-            <div class="flex-1 relative flex items-center bg-surface-container-low border border-outline-variant/30 rounded-[20px] min-h-[36px] px-3 py-1.5">
-                <div id="input-draft" class="flex-1 font-body-md text-body-md text-on-surface outline-none">
-                    Emergency! Here is my live location: [Location Link]
-                </div>
-                <button class="ml-2 w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center active:scale-90 transition-transform">
-                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">arrow_upward</span>
+        <!-- Bottom Input Bar (iMessage Style) -->
+        <footer class="fixed bottom-0 w-full z-50 bg-surface/80 backdrop-blur-3xl border-t-[0.5px] border-outline-variant/30 pb-safe">
+            <form id="chat-form" onsubmit="handleSendMessage(event)" class="flex items-end gap-2 px-3 py-2 max-w-full">
+                <button type="button" class="mb-1 p-1 text-primary active:scale-90 transition-transform">
+                    <span class="material-symbols-outlined text-[26px]">add_circle</span>
                 </button>
-            </div>
-        </div>
-    </footer>
+                <!-- Message Input Area -->
+                <div class="flex-1 relative flex items-center bg-surface-container-low border border-outline-variant/30 rounded-[20px] min-h-[36px] px-3 py-1">
+                    <input type="text" id="chat-input" placeholder="iMessage" class="flex-1 bg-transparent text-white border-0 outline-none text-[15px] focus:ring-0 p-0" />
+                    <button type="submit" class="ml-2 w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center active:scale-90 transition-transform flex-shrink-0">
+                        <span class="material-symbols-outlined text-[20px] font-bold" style="font-variation-settings: 'FILL' 1;">arrow_upward</span>
+                    </button>
+                </div>
+            </form>
+        </footer>
 
+        <!-- Bottom Safe Area Indicator -->
+        <div class="h-1.5 w-32 bg-white/30 mx-auto mb-2 rounded-full z-50 relative pointer-events-none"></div>
+    </div>
+
+    <!-- Leaflet & Message Actions -->
     <script>
+        let map = null;
+        let marker = null;
+        let contactName = 'Sarah Miller';
+
         window.addEventListener('load', () => {
-            const name = localStorage.getItem('emergency_contact_name') || 'Sarah Miller';
-            const message = localStorage.getItem('emergency_message') || 'Emergency! I need assistance at my location...';
+            contactName = localStorage.getItem('emergency_contact_name') || 'Sarah Miller';
+            const messageTemplate = localStorage.getItem('emergency_message') || 'Emergency! Here is my live location:';
             
-            // Coordinates representing current dynamic location
-            const lat = (37.7749 + (Math.random() - 0.5) * 0.01).toFixed(4);
-            const lng = (-122.4194 + (Math.random() - 0.5) * 0.01).toFixed(4);
-            const locationLink = `https://maps.google.com/?q=${lat},${lng}`;
+            // Update UI headers
+            document.getElementById('header-contact-name').innerText = contactName;
+            document.getElementById('chat-timestamp').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            // Update Header Name
-            const headerName = document.getElementById('header-contact-name');
-            if (headerName) headerName.innerText = name;
+            // Initialize Leaflet Map inside the bubble
+            const savedGps = localStorage.getItem('last_known_gps');
+            const pos = savedGps ? JSON.parse(savedGps) : { latitude: 37.7749, longitude: -122.4194 };
+            const userCoords = [pos.latitude, pos.longitude];
 
-            // Update Outgoing Message Bubble
-            const bubbleText = document.getElementById('bubble-text');
-            if (bubbleText) {
-                bubbleText.innerHTML = `${message} <a href="${locationLink}" target="_blank" class="underline text-blue-300 font-semibold break-all">${locationLink}</a>`;
-            }
+            const locationLink = `https://maps.google.com/?q=${pos.latitude.toFixed(5)},${pos.longitude.toFixed(5)}`;
+            document.getElementById('location-url').innerText = locationLink;
+            document.getElementById('location-url').href = locationLink;
+            document.getElementById('bubble-text').innerHTML = `${messageTemplate} <a href="${locationLink}" target="_blank" class="underline font-semibold break-all text-blue-100">${locationLink}</a>`;
 
-            // Update Input Area draft view
-            const inputDraft = document.getElementById('input-draft');
-            if (inputDraft) {
-                inputDraft.innerText = `${message} ${locationLink}`;
-            }
+            // Render Leaflet Dark Map in mini-map container
+            map = L.map('mini-map', {
+                center: userCoords,
+                zoom: 14,
+                zoomControl: false,
+                dragging: false,
+                touchZoom: false,
+                scrollWheelZoom: false,
+                doubleClickZoom: false
+            });
 
-            // Simulate slight delay before status flips to Sent/Delivered
-            const status = document.getElementById('delivered-status');
-            if (status) {
-                status.innerText = "Sending...";
-                setTimeout(() => {
-                    status.innerText = "Delivered";
-                }, 1500);
-            }
+            // CartoDB Dark Matter tiles
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: ''
+            }).addTo(map);
+
+            // Add glowing blue circle representing user
+            marker = L.circle(userCoords, {
+                color: '#007AFF',
+                fillColor: '#007AFF',
+                fillOpacity: 0.4,
+                radius: 120
+            }).addTo(map);
+
+            // Mock sending animation
+            const statusEl = document.getElementById('delivered-status');
+            setTimeout(() => {
+                statusEl.innerText = "Delivered";
+            }, 1200);
+
+            scrollToBottom();
         });
 
-        // Click shake animation on status details
-        document.getElementById('delivered-status').addEventListener('click', function() {
-            this.classList.add('animate-pulse');
-            setTimeout(() => this.classList.remove('animate-pulse'), 1000);
-        });
+        function handleSendMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
 
-        // Atmospheric micro glitch particle visual effect
-        const canvas = document.createElement('div');
-        canvas.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:40;';
-        document.body.appendChild(canvas);
-        
-        function createGlitch() {
-            const bar = document.createElement('div');
-            bar.style.cssText = `position:absolute; width:100%; height:1px; background:rgba(255,159,10,0.05); top:${Math.random()*100}%; left:0;`;
-            canvas.appendChild(bar);
-            setTimeout(() => bar.remove(), 100);
+            input.value = '';
+
+            // 1. Add user bubble to chat canvas
+            const chatEl = document.getElementById('chat-messages');
+            const userBubble = document.createElement('div');
+            userBubble.className = 'message-bubble bubble-right';
+            userBubble.innerHTML = `<p class="text-[15px] leading-snug">${escapeHtml(text)}</p>`;
+            chatEl.appendChild(userBubble);
+
+            const statusLabel = document.createElement('span');
+            statusLabel.className = 'text-[11px] text-white/40 pr-1 self-end block -mt-3';
+            statusLabel.innerText = 'Delivered';
+            chatEl.appendChild(statusLabel);
+
+            scrollToBottom();
+
+            // 2. Play subtle tap vibration
+            if (navigator.vibrate) navigator.vibrate(10);
+
+            // 3. Trigger typing auto-reply after 2.5 seconds
+            setTimeout(() => {
+                showTypingIndicator();
+            }, 1500);
         }
-        setInterval(createGlitch, 3000);
+
+        function showTypingIndicator() {
+            const chatEl = document.getElementById('chat-messages');
+            
+            // Check if typing indicator already exists
+            if (document.getElementById('typing-bubble')) return;
+
+            const typingBubble = document.createElement('div');
+            typingBubble.id = 'typing-bubble';
+            typingBubble.className = 'message-bubble bubble-left p-2 self-start flex items-center justify-center';
+            typingBubble.innerHTML = `
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            chatEl.appendChild(typingBubble);
+            scrollToBottom();
+
+            // After 2.5 seconds, send the response
+            setTimeout(() => {
+                typingBubble.remove();
+                sendAutoReply();
+            }, 2500);
+        }
+
+        function sendAutoReply() {
+            const chatEl = document.getElementById('chat-messages');
+            const replies = [
+                "I see your location now. The coordinates look real. Are you safe to talk?",
+                "I am dialing the emergency services right now and passing them this link. Stay silent!",
+                "Got it. I'm tracking your telemetry updates on the dashboard. Hold on, help is coming.",
+                "I see you moving. Are you in a car? Send another signal if you can."
+            ];
+
+            const chosenReply = replies[Math.floor(Math.random() * replies.length)];
+            
+            const replyBubble = document.createElement('div');
+            replyBubble.className = 'message-bubble bubble-left';
+            replyBubble.innerHTML = `<p class="text-[15px] leading-snug">${escapeHtml(chosenReply)}</p>`;
+            chatEl.appendChild(replyBubble);
+            
+            scrollToBottom();
+
+            // Vibrate screen as notification alerts
+            if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
+        }
+
+        function scrollToBottom() {
+            const chatEl = document.getElementById('chat-messages');
+            chatEl.scrollTop = chatEl.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
     </script>
 </body>
 </html>

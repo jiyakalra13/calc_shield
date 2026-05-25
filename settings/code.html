@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+    <title>CalcShield - Settings</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
       tailwind.config = {
         darkMode: "class",
         theme: {
@@ -60,48 +60,16 @@
                     "surface-variant": "#343535",
                     "on-primary-container": "#673d00",
                     "surface-dim": "#121414"
-            },
-            "borderRadius": {
-                    "DEFAULT": "0.25rem",
-                    "lg": "0.5rem",
-                    "xl": "0.75rem",
-                    "full": "9999px"
-            },
-            "spacing": {
-                    "gutter-grid": "12px",
-                    "margin-main": "16px",
-                    "stack-gap": "8px",
-                    "section-padding": "24px"
-            },
-            "fontFamily": {
-                    "body-md": ["Inter"],
-                    "label-sm": ["Inter"],
-                    "display-lg": ["Inter"],
-                    "headline-md": ["Inter"],
-                    "headline-lg": ["Inter"],
-                    "caption": ["Inter"],
-                    "body-lg": ["Inter"]
-            },
-            "fontSize": {
-                    "body-md": ["15px", {"lineHeight": "20px", "letterSpacing": "-0.24px", "fontWeight": "400"}],
-                    "label-sm": ["13px", {"lineHeight": "18px", "letterSpacing": "-0.08px", "fontWeight": "400"}],
-                    "display-lg": ["94px", {"lineHeight": "112px", "letterSpacing": "-0.02em", "fontWeight": "300"}],
-                    "headline-md": ["22px", {"lineHeight": "28px", "letterSpacing": "0.35px", "fontWeight": "600"}],
-                    "headline-lg": ["34px", {"lineHeight": "41px", "letterSpacing": "0.37px", "fontWeight": "700"}],
-                    "caption": ["11px", {"lineHeight": "13px", "letterSpacing": "0.06px", "fontWeight": "500"}],
-                    "body-lg": ["17px", {"lineHeight": "22px", "letterSpacing": "-0.41px", "fontWeight": "400"}],
-                    "label-sm-mobile": ["12px", {"lineHeight": "16px", "letterSpacing": "-0.08px", "fontWeight": "400"}],
-                    "headline-md-mobile": ["17px", {"lineHeight": "22px", "letterSpacing": "0.35px", "fontWeight": "600"}]
             }
-          },
-        },
+          }
+        }
       }
     </script>
-<style>
+    <style>
         body {
-            background-color: #000000;
-            color: #e3e2e2;
+            user-select: none;
             -webkit-tap-highlight-color: transparent;
+            overflow: hidden;
         }
         .ios-toggle {
             position: relative;
@@ -122,7 +90,7 @@
             right: 0;
             bottom: 0;
             background-color: #39393D;
-            transition: .4s;
+            transition: .3s;
             border-radius: 34px;
         }
         .slider:before {
@@ -133,7 +101,7 @@
             left: 2px;
             bottom: 2px;
             background-color: white;
-            transition: .4s;
+            transition: .3s;
             border-radius: 50%;
             box-shadow: 0 3px 8px rgba(0,0,0,0.15);
         }
@@ -146,160 +114,248 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
-        .safe-pb {
-            padding-bottom: env(safe-area-inset-bottom);
+        .phone-frame {
+            width: 393px;
+            height: 852px;
+            border-radius: 54px;
+            position: relative;
+            box-shadow: 0 0 0 11px #1f1f1f, 0 0 0 13px #333, 0 20px 50px rgba(0,0,0,0.5);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            margin: auto;
         }
-        .safe-pt {
-            padding-top: env(safe-area-inset-top);
+        .dynamic-island {
+            width: 120px;
+            height: 35px;
+            background: #000;
+            border-radius: 20px;
+            position: absolute;
+            top: 11px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
         }
+
+        /* Light & Dark Custom Restyling */
+        .dark body { background-color: #000000; color: #e3e2e2; }
+        .dark .phone-frame { background-color: #000000; }
+        .dark .settings-cell { background-color: #1c1c1e; color: #ffffff; border-color: rgba(255,255,255,0.06); }
+        .dark .header-bar { background-color: rgba(18, 20, 20, 0.8); border-color: rgba(255,255,255,0.1); }
+        .dark .cell-title { color: #ffffff; }
+        .dark .cell-subtitle { color: #a2a2a2; }
+
+        .light body { background-color: #1e1e1e; color: #1c1c1e; }
+        .light .phone-frame { background-color: #f2f2f7; }
+        .light .settings-cell { background-color: #ffffff; color: #000000; border-color: rgba(0,0,0,0.05); }
+        .light .header-bar { background-color: rgba(242, 242, 247, 0.8); border-color: rgba(0,0,0,0.1); }
+        .light .cell-title { color: #000000; }
+        .light .cell-subtitle { color: #8e8e93; }
+        .light .text-secondary { color: #8e8e93; }
+        .light .text-on-surface { color: #000000; }
     </style>
-<style>
-    body {
-      min-height: max(884px, 100dvh);
-    }
-  </style>
-  </head>
-<body class="font-body-md text-body-md select-none overflow-x-hidden">
-<!-- Top Navigation Bar -->
-<header class="bg-surface/80 dark:bg-surface/80 backdrop-blur-3xl fixed top-0 w-full z-50 border-b-[0.5px] border-outline-variant/30 flex justify-between items-center px-4 h-11 safe-pt box-content">
-<button onclick="window.location.href='../calcshield_calculator/code.html'" class="text-primary dark:text-primary active:opacity-70 transition-opacity active:scale-95 transition-transform duration-100 flex items-center">
-<span class="material-symbols-outlined text-[24px]">chevron_left</span>
-</button>
-<h1 class="font-headline-md-mobile text-headline-md-mobile text-on-surface">Settings</h1>
-<button class="text-primary dark:text-primary active:opacity-70 transition-opacity active:scale-95 transition-transform duration-100">
-<span class="material-symbols-outlined text-[24px]">more_horiz</span>
-</button>
-</header>
-<!-- Main Content -->
-<main class="mt-20 px-4 pb-24">
-<!-- Settings Group 1 -->
-<div class="bg-surface-container rounded-xl overflow-hidden mb-8">
-<!-- Theme -->
-<div class="flex items-center justify-between px-4 py-3 active:bg-surface-container-highest transition-colors cursor-pointer group">
-<div class="flex items-center gap-3">
-<div class="w-7 h-7 rounded-lg bg-[#333] flex items-center justify-center">
-<span class="material-symbols-outlined text-[18px] text-white">dark_mode</span>
-</div>
-<span class="text-on-surface font-body-lg">Theme</span>
-</div>
-<div class="flex items-center gap-2">
-<span class="text-secondary text-body-md">Dark</span>
-<span class="material-symbols-outlined text-outline-variant text-[20px]">chevron_right</span>
-</div>
-</div>
-<div class="h-[0.5px] bg-outline-variant/30 ml-14"></div>
-<!-- Display Mode -->
-<div class="flex items-center justify-between px-4 py-3 active:bg-surface-container-highest transition-colors cursor-pointer">
-<div class="flex items-center gap-3">
-<div class="w-7 h-7 rounded-lg bg-[#007AFF] flex items-center justify-center">
-<span class="material-symbols-outlined text-[18px] text-white">aspect_ratio</span>
-</div>
-<span class="text-on-surface font-body-lg">Display Mode</span>
-</div>
-<div class="flex items-center gap-2">
-<span class="text-secondary text-body-md">Standard</span>
-<span class="material-symbols-outlined text-outline-variant text-[20px]">chevron_right</span>
-</div>
-</div>
-</div>
-<!-- Settings Group 2 (Toggles) -->
-<div class="bg-surface-container rounded-xl overflow-hidden mb-8">
-<!-- Calculator History -->
-<div class="flex items-center justify-between px-4 py-2.5">
-<div class="flex items-center gap-3">
-<div class="w-7 h-7 rounded-lg bg-[#FF9500] flex items-center justify-center">
-<span class="material-symbols-outlined text-[18px] text-white">history</span>
-</div>
-<span class="text-on-surface font-body-lg">Calculator History</span>
-</div>
-<label class="ios-toggle">
-<input checked="" type="checkbox"/>
-<span class="slider"></span>
-</label>
-</div>
-<div class="h-[0.5px] bg-outline-variant/30 ml-14"></div>
-<!-- Haptic Feedback -->
-<div class="flex items-center justify-between px-4 py-2.5">
-<div class="flex items-center gap-3">
-<div class="w-7 h-7 rounded-lg bg-[#4CD964] flex items-center justify-center">
-<span class="material-symbols-outlined text-[18px] text-white">vibration</span>
-</div>
-<span class="text-on-surface font-body-lg">Haptic Feedback</span>
-</div>
-<label class="ios-toggle">
-<input checked="" type="checkbox"/>
-<span class="slider"></span>
-</label>
-</div>
-</div>
-<!-- Settings Group 3 -->
-<div class="bg-surface-container rounded-xl overflow-hidden mb-8">
-<!-- About -->
-<div class="flex items-center justify-between px-4 py-3 active:bg-surface-container-highest transition-colors cursor-pointer">
-<div class="flex items-center gap-3">
-<div class="w-7 h-7 rounded-lg bg-[#8E8E93] flex items-center justify-center">
-<span class="material-symbols-outlined text-[18px] text-white">info</span>
-</div>
-<span class="text-on-surface font-body-lg">About</span>
-</div>
-<span class="material-symbols-outlined text-outline-variant text-[20px]">chevron_right</span>
-</div>
-<div class="h-[0.5px] bg-outline-variant/30 ml-14"></div>
-<!-- App Version -->
-<div class="flex items-center justify-between px-4 py-3">
-<div class="flex items-center gap-3">
-<div class="w-7 h-7 rounded-lg bg-[#34C759] flex items-center justify-center">
-<span class="material-symbols-outlined text-[18px] text-white">terminal</span>
-</div>
-<span class="text-on-surface font-body-lg">App Version</span>
-</div>
-<span class="text-secondary text-body-md">2.4.1 (64-bit)</span>
-</div>
-</div>
-<!-- System Banner -->
-<div class="flex flex-col items-center gap-2 opacity-40 mt-12">
-<div class="w-16 h-16 bg-surface-container-highest rounded-2xl flex items-center justify-center shadow-inner">
-<span class="material-symbols-outlined text-[40px] text-secondary">calculate</span>
-</div>
-<p class="text-caption font-caption tracking-widest uppercase">CalcShield Professional</p>
-<p class="text-[10px] text-secondary">© 2024 Apple Inc. All rights reserved.</p>
-</div>
-</main>
-<!-- Bottom Navigation Bar -->
-<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center h-16 px-6 bg-surface/80 dark:bg-surface/80 backdrop-blur-3xl border-t-[0.5px] border-outline-variant/30 pb-safe">
-<button class="flex flex-col items-center gap-1 text-secondary dark:text-secondary active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150">
-<span class="material-symbols-outlined text-[24px]">calculate</span>
-</button>
-<button class="flex flex-col items-center gap-1 text-secondary dark:text-secondary active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150">
-<span class="material-symbols-outlined text-[24px]">history</span>
-</button>
-<button class="flex flex-col items-center gap-1 text-secondary dark:text-secondary active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150">
-<span class="material-symbols-outlined text-[24px]">security</span>
-</button>
-<button class="flex flex-col items-center gap-1 text-primary-container dark:text-primary-container active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150">
-<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">settings</span>
-</button>
-</nav>
-<script>
-        // Haptic feedback simulation
-        document.querySelectorAll('button, .ios-toggle input, .active\\:bg-surface-container-highest').forEach(el => {
-            el.addEventListener('click', () => {
-                if (window.navigator.vibrate) {
-                    window.navigator.vibrate(10);
-                }
-            });
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="phone-frame transition-all duration-300">
+        <!-- Dynamic Island -->
+        <div class="dynamic-island pointer-events-none"></div>
+
+        <!-- Top Navigation Bar -->
+        <header class="header-bar backdrop-blur-3xl fixed top-0 w-full z-50 border-b-[0.5px] flex justify-between items-center px-6 h-14 box-content pt-4">
+            <button onclick="window.location.href='../calcshield_calculator/code.html'" class="text-primary active:opacity-70 transition-opacity flex items-center">
+                <span class="material-symbols-outlined text-[28px] text-[#FF9F0A]">chevron_left</span>
+                <span class="text-[16px] text-[#FF9F0A]">Calc</span>
+            </button>
+            <h1 class="text-[16px] font-semibold text-on-surface">Settings</h1>
+            <div class="w-10"></div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto px-4 pt-24 pb-20">
+            <!-- Settings Group 1 -->
+            <div class="settings-cell rounded-xl overflow-hidden mb-6 flex flex-col">
+                <!-- Theme Mode -->
+                <div class="flex items-center justify-between px-4 py-3 active:opacity-65 transition-opacity cursor-pointer border-b" onclick="toggleThemePreference()">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-lg bg-[#5856D6] flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[18px] text-white">dark_mode</span>
+                        </div>
+                        <span class="cell-title font-body-lg text-[15px]">Dark Theme</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span id="theme-status" class="text-secondary text-[14px]">On</span>
+                        <span class="material-symbols-outlined text-outline-variant text-[20px] text-gray-500">chevron_right</span>
+                    </div>
+                </div>
+
+                <!-- Display Mode -->
+                <div class="flex items-center justify-between px-4 py-3 border-b">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-lg bg-[#007AFF] flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[18px] text-white">aspect_ratio</span>
+                        </div>
+                        <span class="cell-title font-body-lg text-[15px]">Display Precision</span>
+                    </div>
+                    <select id="precision-select" onchange="changePrecision(this.value)" class="bg-transparent border-0 text-secondary focus:ring-0 text-[14px] py-0 px-2 text-right">
+                        <option value="2">2 Decimals</option>
+                        <option value="4">4 Decimals</option>
+                        <option value="6" selected>6 Decimals</option>
+                        <option value="8">8 Decimals</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Settings Group 2 (Toggles) -->
+            <div class="settings-cell rounded-xl overflow-hidden mb-6 flex flex-col">
+                <!-- Calculator History -->
+                <div class="flex items-center justify-between px-4 py-2.5 border-b">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-lg bg-[#FF9500] flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[18px] text-white">history</span>
+                        </div>
+                        <span class="cell-title font-body-lg text-[15px]">Calculator History</span>
+                    </div>
+                    <label class="ios-toggle">
+                        <input id="history-toggle" onchange="toggleCalcHistory(this.checked)" type="checkbox" checked/>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <!-- Haptic Feedback -->
+                <div class="flex items-center justify-between px-4 py-2.5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-lg bg-[#4CD964] flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[18px] text-white">vibration</span>
+                        </div>
+                        <span class="cell-title font-body-lg text-[15px]">Haptic Feedback</span>
+                    </div>
+                    <label class="ios-toggle">
+                        <input id="haptic-toggle" onchange="toggleHaptics(this.checked)" type="checkbox" checked/>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Settings Group 3 -->
+            <div class="settings-cell rounded-xl overflow-hidden mb-6 flex flex-col">
+                <!-- About -->
+                <div class="flex items-center justify-between px-4 py-3 border-b active:opacity-65 transition-opacity cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-lg bg-[#8E8E93] flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[18px] text-white">info</span>
+                        </div>
+                        <span class="cell-title font-body-lg text-[15px]">About</span>
+                    </div>
+                    <span class="material-symbols-outlined text-outline-variant text-[20px] text-gray-500">chevron_right</span>
+                </div>
+                <!-- App Version -->
+                <div class="flex items-center justify-between px-4 py-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-lg bg-[#34C759] flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[18px] text-white">terminal</span>
+                        </div>
+                        <span class="cell-title font-body-lg text-[15px]">App Version</span>
+                    </div>
+                    <span class="text-secondary text-[14px]">SilentSignal 3.1.2</span>
+                </div>
+            </div>
+
+            <!-- System Banner -->
+            <div class="flex flex-col items-center gap-2 opacity-40 mt-12 pb-6">
+                <div class="w-16 h-16 bg-neutral-800 rounded-2xl flex items-center justify-center shadow-inner">
+                    <span class="material-symbols-outlined text-[40px] text-secondary text-gray-400">calculate</span>
+                </div>
+                <p class="text-[11px] font-semibold tracking-widest uppercase text-on-surface">CalcShield Pro</p>
+                <p class="text-[10px] text-secondary">© 2026 Apple Inc. All rights reserved.</p>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation Bar -->
+        <nav class="fixed bottom-0 w-full z-50 bg-surface/80 backdrop-blur-3xl border-t-[0.5px] border-outline-variant/30 flex justify-around items-center h-16 px-6 pb-safe">
+            <button onclick="window.location.href='../calcshield_calculator/code.html'" class="flex flex-col items-center gap-1 text-secondary active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150">
+                <span class="material-symbols-outlined text-[24px]">calculate</span>
+            </button>
+            <button onclick="showDisguisePrompt()" class="flex flex-col items-center gap-1 text-secondary active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150">
+                <span class="material-symbols-outlined text-[24px]">history</span>
+            </button>
+            <button onclick="showDisguisePrompt()" class="flex flex-col items-center gap-1 text-secondary active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150">
+                <span class="material-symbols-outlined text-[24px]">security</span>
+            </button>
+            <button class="flex flex-col items-center gap-1 text-primary-container active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150">
+                <span class="material-symbols-outlined text-[24px] text-[#FF9F0A]" style="font-variation-settings: 'FILL' 1;">settings</span>
+            </button>
+        </nav>
+
+        <!-- Bottom Safe Area Indicator -->
+        <div class="h-1.5 w-32 bg-white/30 mx-auto mb-2 rounded-full z-50 relative pointer-events-none"></div>
+    </div>
+
+    <!-- Preferences Javascript -->
+    <script>
+        window.addEventListener('load', () => {
+            // Apply theme on load
+            const currentTheme = localStorage.getItem('theme') || 'dark';
+            applyTheme(currentTheme);
+
+            // Sync toggle values from local storage
+            document.getElementById('history-toggle').checked = localStorage.getItem('calc_history') !== 'false';
+            document.getElementById('haptic-toggle').checked = localStorage.getItem('haptic_feedback') !== 'false';
+
+            const savedPrecision = localStorage.getItem('precision') || '6';
+            document.getElementById('precision-select').value = savedPrecision;
         });
 
-        // Toggle logic visual feedback
-        document.querySelectorAll('.ios-toggle input').forEach(toggle => {
-            toggle.addEventListener('change', function() {
-                const parent = this.closest('div');
-                if (this.checked) {
-                    console.log('Feature enabled');
-                } else {
-                    console.log('Feature disabled');
-                }
-            });
-        });
+        function applyTheme(theme) {
+            const htmlEl = document.documentElement;
+            const themeStatus = document.getElementById('theme-status');
+            
+            if (theme === 'light') {
+                htmlEl.classList.remove('dark');
+                htmlEl.classList.add('light');
+                themeStatus.innerText = 'Off';
+            } else {
+                htmlEl.classList.remove('light');
+                htmlEl.classList.add('dark');
+                themeStatus.innerText = 'On';
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        function toggleThemePreference() {
+            triggerVibration();
+            const current = localStorage.getItem('theme') || 'dark';
+            const nextTheme = current === 'dark' ? 'light' : 'dark';
+            applyTheme(nextTheme);
+        }
+
+        function toggleCalcHistory(enabled) {
+            triggerVibration();
+            localStorage.setItem('calc_history', enabled ? 'true' : 'false');
+            if(!enabled) {
+                localStorage.removeItem('calculations');
+            }
+        }
+
+        function toggleHaptics(enabled) {
+            localStorage.setItem('haptic_feedback', enabled ? 'true' : 'false');
+            triggerVibration();
+        }
+
+        function changePrecision(val) {
+            triggerVibration();
+            localStorage.setItem('precision', val);
+        }
+
+        function showDisguisePrompt() {
+            triggerVibration();
+            alert("No data synced. Unlock premium calculator functions to view details.");
+        }
+
+        function triggerVibration() {
+            const vibe = localStorage.getItem('haptic_feedback') !== 'false';
+            if (vibe && window.navigator.vibrate) {
+                window.navigator.vibrate(10);
+            }
+        }
     </script>
-</body></html>
+</body>
+</html>

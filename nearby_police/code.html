@@ -1,14 +1,16 @@
 <!DOCTYPE html>
-
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
-<title>Nearby Police Station</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<style>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+    <title>Nearby Police Station</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <!-- Leaflet.js Map Assets -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
         :root {
             --ios-blur: blur(25px);
         }
@@ -16,21 +18,45 @@
             font-family: 'Inter', sans-serif;
             -webkit-tap-highlight-color: transparent;
             background-color: #000000;
+            user-select: none;
+            overflow: hidden;
         }
         .ios-glass {
-            background: rgba(28, 28, 30, 0.8);
+            background: rgba(28, 28, 30, 0.85);
             backdrop-filter: var(--ios-blur);
             -webkit-backdrop-filter: var(--ios-blur);
         }
         .map-gradient-overlay {
-            background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 20%, rgba(0,0,0,0) 70%, rgba(0,0,0,0.6) 100%);
+            background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 15%, rgba(0,0,0,0) 80%, rgba(0,0,0,0.7) 100%);
             pointer-events: none;
         }
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
+        /* Custom markers styling */
+        .leaflet-container { background: #000 !important; }
+        .user-marker-icon {
+            width: 16px;
+            height: 16px;
+            background: #007AFF;
+            border: 2px solid #FFFFFF;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 122, 255, 0.6);
+        }
+        .police-marker-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: #007AFF;
+            border: 2px solid #FFFFFF;
+            border-radius: 50%;
+            color: white;
+            box-shadow: 0 0 12px rgba(0, 122, 255, 0.8);
+        }
     </style>
-<script id="tailwind-config">
+    <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
@@ -83,157 +109,369 @@
                         "surface-variant": "#343535",
                         "on-primary-container": "#673d00",
                         "surface-dim": "#121414"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                    "spacing": {
-                        "gutter-grid": "12px",
-                        "margin-main": "16px",
-                        "stack-gap": "8px",
-                        "section-padding": "24px"
-                    },
-                    "fontFamily": {
-                        "body-md": ["Inter"],
-                        "label-sm": ["Inter"],
-                        "display-lg": ["Inter"],
-                        "headline-md": ["Inter"],
-                        "headline-lg": ["Inter"],
-                        "caption": ["Inter"],
-                        "body-lg": ["Inter"]
-                    },
-                    "fontSize": {
-                        "body-md": ["15px", {"lineHeight": "20px", "letterSpacing": "-0.24px", "fontWeight": "400"}],
-                        "label-sm": ["13px", {"lineHeight": "18px", "letterSpacing": "-0.08px", "fontWeight": "400"}],
-                        "display-lg": ["94px", {"lineHeight": "112px", "letterSpacing": "-0.02em", "fontWeight": "300"}],
-                        "headline-md": ["22px", {"lineHeight": "28px", "letterSpacing": "0.35px", "fontWeight": "600"}],
-                        "headline-lg": ["34px", {"lineHeight": "41px", "letterSpacing": "0.37px", "fontWeight": "700"}],
-                        "caption": ["11px", {"lineHeight": "13px", "letterSpacing": "0.06px", "fontWeight": "500"}],
-                        "body-lg": ["17px", {"lineHeight": "22px", "letterSpacing": "-0.41px", "fontWeight": "400"}]
                     }
                 }
             }
         }
     </script>
-<style>
-    body {
-      min-height: max(884px, 100dvh);
-    }
-  </style>
-  </head>
-<body class="bg-black text-on-surface selection:bg-primary/30 overflow-hidden h-screen">
-<!-- Top App Bar -->
-<header class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-3xl border-b-[0.5px] border-outline-variant/30 flex justify-between items-center px-4 h-11">
-<div onclick="window.location.href='../emergency_settings/code.html'" class="flex items-center active:opacity-70 transition-opacity active:scale-95 transition-transform duration-100 cursor-pointer">
-<span class="material-symbols-outlined text-primary dark:text-primary">chevron_left</span>
-</div>
-<h1 class="font-headline-md text-headline-md text-on-surface">Calculator</h1>
-<div class="flex items-center active:opacity-70 transition-opacity active:scale-95 transition-transform duration-100">
-<span class="material-symbols-outlined text-primary dark:text-primary">more_horiz</span>
-</div>
-</header>
-<!-- Full Screen Map Canvas -->
-<main class="relative w-full h-full pt-11 pb-16 overflow-hidden">
-<div class="absolute inset-0 bg-surface-container-lowest overflow-hidden">
-<img class="w-full h-full object-cover grayscale brightness-50 contrast-125" data-alt="A detailed, high-contrast dark mode digital map of a dense urban environment at night. The cartography is styled in deep charcoals and blacks with roads highlighted in subtle gunmetal gray. Iconic street grids and city blocks are visible, punctuated by glowing soft-blue GPS pins representing police station locations. The lighting is moody and technical, emphasizing a high-fidelity utility interface designed for night-time navigation with a professional, stealthy aesthetic." data-location="New York City" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5zL_ME7FIMjlSsFBQ3Rr8zqEjKkfhMouSl3LoJfBa_Xi2i4N8HaFBmwZnZz6h5gAbmVAKIUjam3yMWAm1hS9tplogR6cbD2H7sOe6767uT63fUuV13jNcUXlY-25YMrTqwj3AHW7EZ8QQR2z7SY0tDOvaxTpUvkb2pv9jdtJoCk3JkKnCcQaP5M_TuCBShh3Qq6nUYTQSxOjxH_zwUFRa4GWrvcdi96WweQazFeTagtdQhhqgkiBMEx3qPUKDJyWWSGrQVTUUn4ms"/>
-<div class="map-gradient-overlay absolute inset-0"></div>
-<!-- Custom Pins -->
-<div class="absolute top-[40%] left-[35%] animate-pulse">
-<div class="relative flex flex-col items-center">
-<div class="bg-[#007AFF] p-1.5 rounded-full shadow-lg shadow-blue-500/20 ring-2 ring-white/20">
-<span class="material-symbols-outlined text-white text-[16px]" style="font-variation-settings: 'FILL' 1;">security</span>
-</div>
-<div class="w-0.5 h-2 bg-[#007AFF]"></div>
-</div>
-</div>
-<div class="absolute top-[25%] left-[60%] opacity-80">
-<div class="relative flex flex-col items-center">
-<div class="bg-[#474649] p-1.5 rounded-full shadow-lg ring-2 ring-white/10">
-<span class="material-symbols-outlined text-white text-[14px]" style="font-variation-settings: 'FILL' 1;">security</span>
-</div>
-</div>
-</div>
-<div class="absolute top-[65%] left-[20%] opacity-80">
-<div class="relative flex flex-col items-center">
-<div class="bg-[#474649] p-1.5 rounded-full shadow-lg ring-2 ring-white/10">
-<span class="material-symbols-outlined text-white text-[14px]" style="font-variation-settings: 'FILL' 1;">security</span>
-</div>
-</div>
-</div>
-<!-- User Location -->
-<div class="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2">
-<div class="relative">
-<div class="absolute inset-0 bg-blue-500 rounded-full animate-ping opacity-25"></div>
-<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md relative z-10"></div>
-</div>
-</div>
-</div>
-<!-- Floating UI Controls -->
-<div class="absolute top-16 right-4 flex flex-col gap-2">
-<button class="ios-glass w-11 h-11 rounded-lg flex items-center justify-center text-on-surface shadow-lg border border-white/5 active:scale-90 transition-transform">
-<span class="material-symbols-outlined">layers</span>
-</button>
-<div class="ios-glass rounded-lg flex flex-col shadow-lg border border-white/5 overflow-hidden">
-<button class="w-11 h-11 flex items-center justify-center text-on-surface active:bg-white/10 transition-colors border-b border-white/5">
-<span class="material-symbols-outlined">add</span>
-</button>
-<button class="w-11 h-11 flex items-center justify-center text-on-surface active:bg-white/10 transition-colors">
-<span class="material-symbols-outlined">remove</span>
-</button>
-</div>
-<button class="ios-glass w-11 h-11 rounded-lg flex items-center justify-center text-[#007AFF] shadow-lg border border-white/5 active:scale-90 transition-transform">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">near_me</span>
-</button>
-</div>
-<!-- Closest Station Card -->
-<div class="absolute bottom-20 left-4 right-4 z-40">
-<div class="ios-glass rounded-2xl p-4 shadow-2xl border border-white/10 ring-1 ring-black/5 flex items-center justify-between transition-all hover:bg-surface-variant/90">
-<div class="flex items-center gap-4">
-<div class="bg-primary-container p-3 rounded-full flex items-center justify-center text-on-primary-container shadow-inner">
-<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">local_police</span>
-</div>
-<div>
-<h2 class="font-headline-md text-headline-md text-white">Central Police Station</h2>
-<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-1">
-<span class="material-symbols-outlined text-[14px]">near_me</span>
-                            0.4 miles away
-                        </p>
-</div>
-</div>
-<button class="bg-[#007AFF] hover:bg-[#0066CC] active:scale-95 transition-all px-5 py-2.5 rounded-full flex items-center gap-2 text-white font-semibold shadow-lg shadow-blue-500/20">
-<span class="material-symbols-outlined text-[20px]">directions</span>
-<span class="font-label-sm text-label-sm">Directions</span>
-</button>
-</div>
-</div>
-</main>
-<!-- Bottom Navigation Bar -->
-<nav class="fixed bottom-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-3xl border-t-[0.5px] border-outline-variant/30 flex justify-around items-center h-16 px-6 pb-safe">
-<div class="flex flex-col items-center gap-1 active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150 text-secondary dark:text-secondary">
-<span class="material-symbols-outlined">calculate</span>
-</div>
-<div class="flex flex-col items-center gap-1 active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150 text-secondary dark:text-secondary">
-<span class="material-symbols-outlined">history</span>
-</div>
-<div class="flex flex-col items-center gap-1 active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150 text-primary-container dark:text-primary-container">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">security</span>
-</div>
-<div class="flex flex-col items-center gap-1 active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150 text-secondary dark:text-secondary">
-<span class="material-symbols-outlined">settings</span>
-</div>
-</nav>
-<!-- Interaction Script -->
-<script>
-        document.querySelectorAll('button, .active\\:opacity-70').forEach(el => {
-            el.addEventListener('click', function() {
-                // Light haptic simulation if available
-                if (window.navigator && window.navigator.vibrate) {
-                    window.navigator.vibrate(10);
-                }
-            });
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+        .phone-frame {
+            width: 393px;
+            height: 852px;
+            background: #000;
+            border-radius: 54px;
+            position: relative;
+            box-shadow: 0 0 0 11px #1f1f1f, 0 0 0 13px #333, 0 20px 50px rgba(0,0,0,0.5);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            margin: auto;
+        }
+        .dynamic-island {
+            width: 120px;
+            height: 35px;
+            background: #000;
+            border-radius: 20px;
+            position: absolute;
+            top: 11px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-neutral-950">
+    <div class="phone-frame">
+        <!-- Dynamic Island -->
+        <div class="dynamic-island pointer-events-none"></div>
+
+        <!-- Top App Bar -->
+        <header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-3xl border-b-[0.5px] border-outline-variant/30 flex justify-between items-center px-6 h-14 box-content pt-4">
+            <div onclick="window.location.href='../emergency_settings/code.html'" class="flex items-center active:opacity-70 transition-opacity cursor-pointer">
+                <span class="material-symbols-outlined text-primary text-[28px]">chevron_left</span>
+                <span class="font-body-lg text-primary text-[16px]">Back</span>
+            </div>
+            <h1 class="font-headline-md text-white text-[16px] font-semibold mr-6">Nearby Police</h1>
+            <div class="flex items-center active:opacity-70 transition-opacity cursor-pointer">
+                <span class="material-symbols-outlined text-primary">more_horiz</span>
+            </div>
+        </header>
+
+        <!-- Map Container -->
+        <main class="relative w-full h-full pt-14 pb-16 overflow-hidden">
+            <div id="leaflet-map" class="absolute inset-0 z-10"></div>
+            <div class="map-gradient-overlay absolute inset-0 z-20"></div>
+
+            <!-- Floating UI Controls -->
+            <div class="absolute top-20 right-4 flex flex-col gap-2.5 z-30">
+                <button onclick="toggleMapLayer()" class="ios-glass w-11 h-11 rounded-lg flex items-center justify-center text-on-surface shadow-lg border border-white/5 active:scale-90 transition-transform">
+                    <span class="material-symbols-outlined text-[20px]" id="layer-icon">layers</span>
+                </button>
+                <div class="ios-glass rounded-lg flex flex-col shadow-lg border border-white/5 overflow-hidden">
+                    <button onclick="zoomMap(1)" class="w-11 h-11 flex items-center justify-center text-on-surface active:bg-white/10 transition-colors border-b border-white/5">
+                        <span class="material-symbols-outlined text-[20px]">add</span>
+                    </button>
+                    <button onclick="zoomMap(-1)" class="w-11 h-11 flex items-center justify-center text-on-surface active:bg-white/10 transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">remove</span>
+                    </button>
+                </div>
+                <button onclick="recenterMap()" class="ios-glass w-11 h-11 rounded-lg flex items-center justify-center text-[#007AFF] shadow-lg border border-white/5 active:scale-90 transition-transform">
+                    <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">near_me</span>
+                </button>
+            </div>
+
+            <!-- Closest Station Card -->
+            <div class="absolute bottom-20 left-4 right-4 z-30">
+                <div class="ios-glass rounded-2xl p-4 shadow-2xl border border-white/10 ring-1 ring-black/5 flex items-center justify-between transition-all">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-primary-container p-3 rounded-full flex items-center justify-center text-on-primary-container shadow-inner">
+                            <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">local_police</span>
+                        </div>
+                        <div>
+                            <h2 id="station-name" class="text-white text-[15px] font-semibold">Central Police Station</h2>
+                            <p id="station-distance" class="text-[12px] text-white/50 flex items-center gap-1 mt-0.5">
+                                <span class="material-symbols-outlined text-[13px]">near_me</span>
+                                Calculating...
+                            </p>
+                        </div>
+                    </div>
+                    <button id="nav-btn" onclick="startNavigationSimulation()" class="bg-[#007AFF] hover:bg-[#0066CC] active:scale-95 transition-all px-4 py-2.5 rounded-full flex items-center gap-1.5 text-white font-semibold shadow-lg shadow-blue-500/20">
+                        <span id="nav-btn-icon" class="material-symbols-outlined text-[18px]">directions</span>
+                        <span id="nav-btn-text" class="text-[12px]">Directions</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation Bar -->
+        <nav class="fixed bottom-0 w-full z-50 bg-surface/85 dark:bg-surface/85 backdrop-blur-3xl border-t-[0.5px] border-outline-variant/30 flex justify-around items-center h-16 px-6 pb-safe">
+            <button onclick="window.location.href='../calcshield_calculator/code.html'" class="flex flex-col items-center gap-1 active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150 text-secondary dark:text-secondary">
+                <span class="material-symbols-outlined text-[24px]">calculate</span>
+            </button>
+            <button onclick="window.location.href='../calcshield_calculator/code.html'" class="flex flex-col items-center gap-1 active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150 text-secondary dark:text-secondary">
+                <span class="material-symbols-outlined text-[24px]">history</span>
+            </button>
+            <button onclick="window.location.href='../emergency_settings/code.html'" class="flex flex-col items-center gap-1 active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150 text-primary-container dark:text-primary-container">
+                <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">security</span>
+            </button>
+            <button onclick="window.location.href='../emergency_settings/code.html'" class="flex flex-col items-center gap-1 active:opacity-70 transition-opacity active:scale-90 transition-transform duration-150 text-secondary dark:text-secondary">
+                <span class="material-symbols-outlined text-[24px]">settings</span>
+            </button>
+        </nav>
+
+        <!-- Bottom Safe Area Indicator -->
+        <div class="h-1.5 w-32 bg-white/30 mx-auto mb-2 rounded-full z-50 relative pointer-events-none"></div>
+    </div>
+
+    <!-- Map & API logic -->
+    <script>
+        let map = null;
+        let userMarker = null;
+        let userCoords = [37.7749, -122.4194]; // Default San Francisco
+        
+        let darkTiles = null;
+        let satTiles = null;
+        let currentLayer = 'dark';
+        
+        let stationMarkers = [];
+        let closestStation = null;
+        let routeLine = null;
+        let animationFrame = null;
+
+        window.addEventListener('load', () => {
+            // Get user's real coordinate
+            const savedGps = localStorage.getItem('last_known_gps');
+            if (savedGps) {
+                const pos = JSON.parse(savedGps);
+                userCoords = [pos.latitude, pos.longitude];
+            }
+
+            // Attempt Geolocation
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    userCoords = [pos.coords.latitude, pos.coords.longitude];
+                    initMap();
+                }, (err) => {
+                    console.warn('Geolocation failed. Loading center from local storage.', err);
+                    initMap();
+                });
+            } else {
+                initMap();
+            }
         });
+
+        function initMap() {
+            if (map) return;
+
+            // 1. Initialize Map
+            map = L.map('leaflet-map', {
+                center: userCoords,
+                zoom: 14,
+                zoomControl: false
+            });
+
+            // 2. Set layers
+            darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: ''
+            });
+            
+            satTiles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: ''
+            });
+
+            darkTiles.addTo(map);
+
+            // 3. User Marker
+            const userIcon = L.divIcon({
+                className: 'user-marker-icon',
+                iconSize: [16, 16],
+                iconAnchor: [8, 8]
+            });
+            userMarker = L.marker(userCoords, { icon: userIcon }).addTo(map);
+
+            // 4. Fetch real-life nearby police stations
+            fetchNearbyPolice();
+        }
+
+        function fetchNearbyPolice() {
+            const url = `/api/nearby-services?lat=${userCoords[0]}&lon=${userCoords[1]}&type=police`;
+            
+            fetch(url)
+                .then(res => res.json())
+                .then(stations => {
+                    // Clear previous markers
+                    stationMarkers.forEach(m => map.removeLayer(m));
+                    stationMarkers = [];
+
+                    if (stations.length === 0) {
+                        document.getElementById('station-name').innerText = "No stations within 5 miles";
+                        document.getElementById('station-distance').innerText = "Area offline";
+                        return;
+                    }
+
+                    // Store closest
+                    closestStation = stations[0];
+                    document.getElementById('station-name').innerText = closestStation.name;
+                    document.getElementById('station-distance').innerHTML = `
+                        <span class="material-symbols-outlined text-[13px]">near_me</span>
+                        ${closestStation.distance} miles away
+                    `;
+
+                    // Render markers for all fetched stations
+                    stations.forEach((st, index) => {
+                        const isClosest = index === 0;
+                        const policeIcon = L.divIcon({
+                            className: 'police-marker-icon',
+                            html: `<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">security</span>`,
+                            iconSize: [28, 28],
+                            iconAnchor: [14, 14]
+                        });
+
+                        const stMarker = L.marker([st.lat, st.lon], { icon: policeIcon }).addTo(map);
+                        stMarker.bindPopup(`<b>${st.name}</b><br>${st.address || 'Local Precinct'}`);
+                        stationMarkers.push(stMarker);
+                    });
+                })
+                .catch(err => {
+                    console.error('Fetch stations error:', err);
+                    document.getElementById('station-name').innerText = "Police Station Offline";
+                    document.getElementById('station-distance').innerText = "Failed connection to server";
+                });
+        }
+
+        // Map Control Functions
+        function zoomMap(delta) {
+            if (map) {
+                map.setZoom(map.getZoom() + delta);
+            }
+        }
+
+        function recenterMap() {
+            if (map) {
+                map.setView(userCoords, 14, { animate: true });
+            }
+        }
+
+        function toggleMapLayer() {
+            if (!map) return;
+            const icon = document.getElementById('layer-icon');
+            if (currentLayer === 'dark') {
+                map.removeLayer(darkTiles);
+                satTiles.addTo(map);
+                currentLayer = 'satellite';
+                icon.style.color = '#ffb868';
+            } else {
+                map.removeLayer(satTiles);
+                darkTiles.addTo(map);
+                currentLayer = 'dark';
+                icon.style.color = '#ffffff';
+            }
+        }
+
+        // Interactive GPS route navigation simulation
+        let navInterval = null;
+
+        function startNavigationSimulation() {
+            if (!closestStation) return;
+            
+            const navBtn = document.getElementById('nav-btn');
+            const navText = document.getElementById('nav-btn-text');
+            const navIcon = document.getElementById('nav-btn-icon');
+
+            if (navInterval) {
+                // Cancel navigation if already running
+                clearInterval(navInterval);
+                navInterval = null;
+                if (routeLine) map.removeLayer(routeLine);
+                userMarker.setLatLng(userCoords);
+                navBtn.className = navBtn.className.replace('bg-green-600', 'bg-[#007AFF]');
+                navText.innerText = "Directions";
+                navIcon.innerText = "directions";
+                document.getElementById('station-distance').innerHTML = `
+                    <span class="material-symbols-outlined text-[13px]">near_me</span>
+                    ${closestStation.distance} miles away
+                `;
+                return;
+            }
+
+            // Start navigation setup
+            navBtn.className = navBtn.className.replace('bg-[#007AFF]', 'bg-green-600');
+            navText.innerText = "Stop Route";
+            navIcon.innerText = "close";
+
+            const start = userCoords;
+            const end = [closestStation.lat, closestStation.lon];
+
+            // Build Route Nodes (Interpolating points to simulate road-turns)
+            const routePoints = [start];
+            
+            // Generate standard 2 road turns to look realistic
+            const mid1 = [start[0] + (end[0]-start[0])*0.4, start[1]];
+            const mid2 = [start[0] + (end[0]-start[0])*0.4, start[1] + (end[1]-start[1])*0.7];
+            
+            routePoints.push(mid1, mid2, end);
+
+            // Draw polyline route path
+            routeLine = L.polyline(routePoints, {
+                color: '#34C759',
+                weight: 4,
+                opacity: 0.8,
+                dashArray: '8, 8'
+            }).addTo(map);
+
+            // Fit bounds
+            map.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
+
+            // Animate blue user dot moving along the path
+            let progress = 0;
+            const totalSteps = 100;
+            const allCoords = [];
+            
+            // Simple interpolation function
+            for (let i = 0; i < routePoints.length - 1; i++) {
+                const s = routePoints[i];
+                const e = routePoints[i+1];
+                const segmentSteps = totalSteps / (routePoints.length - 1);
+                for (let j = 0; j < segmentSteps; j++) {
+                    const t = j / segmentSteps;
+                    allCoords.push([
+                        s[0] + (e[0] - s[0]) * t,
+                        s[1] + (e[1] - s[1]) * t
+                    ]);
+                }
+            }
+            allCoords.push(end);
+
+            navInterval = setInterval(() => {
+                if (progress >= allCoords.length) {
+                    clearInterval(navInterval);
+                    navInterval = null;
+                    navText.innerText = "Arrived";
+                    navIcon.innerText = "check";
+                    document.getElementById('station-distance').innerText = "Arrived at destination";
+                    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                    return;
+                }
+
+                const currentStepPos = allCoords[progress];
+                userMarker.setLatLng(currentStepPos);
+                map.panTo(currentStepPos);
+
+                // Update dynamic countdown metrics
+                const remainingDistance = closestStation.distance * (1 - (progress / allCoords.length));
+                const remainingMins = Math.ceil(remainingDistance * 4); // assume 4 mins per mile
+
+                document.getElementById('station-distance').innerHTML = `
+                    <span class="material-symbols-outlined text-[13px] text-green-500">navigation</span>
+                    ${remainingDistance.toFixed(2)} mi (${remainingMins} min remaining)
+                `;
+
+                progress++;
+            }, 150);
+        }
     </script>
-</body></html>
+</body>
+</html>

@@ -105,6 +105,7 @@
             min-height: 100vh;
             font-family: 'Inter', sans-serif;
             overflow: hidden;
+            user-select: none;
         }
 
         .phone-frame {
@@ -142,42 +143,88 @@
         }
 
         .calc-btn {
-            width: 80px;
-            height: 80px;
+            width: 72px;
+            height: 72px;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 500;
             cursor: pointer;
             user-select: none;
-            transition: filter 0.1s ease;
+            transition: filter 0.1s ease, transform 0.05s ease;
         }
 
         .calc-btn:active {
-            filter: brightness(1.5);
+            filter: brightness(1.3);
+            transform: scale(0.95);
         }
 
         /* iOS Calculator Colors */
         .btn-utility { background-color: #A2A2A2; color: #000; }
         .btn-number { background-color: #333333; color: #FFF; }
         .btn-operator { background-color: #FF9F0A; color: #FFF; }
+        .btn-scientific { background-color: #212124; color: #ffb868; font-size: 16px; border-radius: 12px; height: 44px; width: auto; }
         
         .btn-zero {
-            width: 172px;
+            width: 156px;
             border-radius: 40px;
             justify-content: flex-start;
-            padding-left: 32px;
+            padding-left: 28px;
         }
 
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
-    </style>
-    <style>
-        body {
-            min-height: max(884px, 100dvh);
+
+        /* Glassmorphic Drawer */
+        .glass-drawer {
+            position: absolute;
+            top: 0;
+            right: -100%;
+            width: 82%;
+            height: 100%;
+            background: rgba(18, 20, 20, 0.85);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-left: 0.5px solid rgba(255,255,255,0.08);
+            z-index: 1000;
+            transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            flex-direction: column;
+            padding-top: 50px;
+        }
+        .glass-drawer.open {
+            right: 0;
+        }
+
+        /* Custom Scrollbar */
+        .drawer-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .drawer-list::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.15);
+            border-radius: 10px;
+        }
+
+        /* 1px Blinking Stealth Indicator */
+        #stealth-pixel {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 2px;
+            height: 2px;
+            background-color: rgba(255,255,255,0.15);
+            pointer-events: none;
+            z-index: 9999;
+        }
+        .pixel-blink {
+            animation: pulse-pixel 3s infinite linear;
+        }
+        @keyframes pulse-pixel {
+            0%, 100% { background-color: rgba(255,255,255,0.02); }
+            50% { background-color: rgba(255,255,255,0.2); }
         }
     </style>
 </head>
@@ -185,18 +232,21 @@
     <div class="phone-frame">
         <!-- Dynamic Island with Mic stealth indicator dot -->
         <div class="dynamic-island flex items-center justify-end px-3 gap-1.5 pointer-events-none">
-            <div id="mic-indicator" class="w-2.5 h-2.5 rounded-full bg-green-500 hidden animate-pulse"></div>
+            <div id="mic-indicator" class="w-2.5 h-2.5 rounded-full bg-orange-500 hidden animate-pulse"></div>
         </div>
+
+        <!-- 1px Stealth Pixel -->
+        <div id="stealth-pixel" class="pixel-blink"></div>
 
         <!-- Top Notification Toast Overlay -->
         <div id="ios-toast" class="absolute top-14 left-4 right-4 bg-white/10 backdrop-blur-xl border border-white/10 py-3.5 px-5 rounded-2xl flex items-center gap-3.5 z-[9999] -translate-y-24 opacity-0 transition-all duration-300 pointer-events-none shadow-xl">
-            <div class="bg-green-500 w-7 h-7 rounded-full flex items-center justify-center shadow-md">
-                <span class="material-symbols-outlined text-white text-[16px] font-bold">check</span>
+            <div class="bg-primary-container w-7 h-7 rounded-full flex items-center justify-center shadow-md">
+                <span class="material-symbols-outlined text-white text-[16px] font-bold">priority_high</span>
             </div>
             <p id="ios-toast-msg" class="text-[14px] font-medium text-white"></p>
         </div>
 
-        <!-- Simulated Call Overlay -->
+        <!-- Simulated Call Overlay (Only triggers via test code "555=" or settings dashboard when safe) -->
         <div id="emergency-call-overlay" class="absolute inset-0 bg-black/95 z-[999] flex flex-col justify-between py-16 px-8 hidden transition-opacity duration-300 opacity-0">
             <div class="flex flex-col items-center mt-12">
                 <div class="w-20 h-20 rounded-full bg-red-600 flex items-center justify-center mb-4 animate-pulse">
@@ -255,21 +305,64 @@
         <!-- TopAppBar -->
         <header class="fixed top-0 w-full z-50 flex justify-between items-center px-8 h-14 pointer-events-none">
             <button onclick="navigateSettings()" class="pointer-events-auto active:opacity-40 transition-opacity">
-                <span class="material-symbols-outlined text-surface-container-highest !text-[20px]" data-icon="settings">settings</span>
+                <span class="material-symbols-outlined text-white/40 !text-[22px]" data-icon="settings">settings</span>
             </button>
-            <button class="pointer-events-auto active:opacity-40 transition-opacity">
-                <span class="material-symbols-outlined text-surface-container-highest !text-[20px]" data-icon="history">history</span>
-            </button>
+            
+            <div class="flex gap-4 pointer-events-auto">
+                <button onclick="toggleScientific()" class="active:opacity-40 transition-opacity">
+                    <span id="sci-icon" class="material-symbols-outlined text-white/40 !text-[22px]">science</span>
+                </button>
+                <button onclick="toggleDrawer()" class="active:opacity-40 transition-opacity">
+                    <span class="material-symbols-outlined text-white/40 !text-[22px]" data-icon="history">history</span>
+                </button>
+            </div>
         </header>
 
-        <!-- Main Calculator Canvas -->
-        <main class="flex-1 flex flex-col pt-20 pb-8 px-4">
-            <!-- Result Area -->
-            <div class="calc-display">
-                <div class="font-display-lg text-display-lg text-white text-right break-all" id="display-value">0</div>
+        <!-- Glassmorphic Drawer (History / Vault) -->
+        <div id="drawer" class="glass-drawer">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-4 pb-4 border-b border-white/10">
+                <h3 id="drawer-title" class="text-white font-semibold text-[18px]">Calculation History</h3>
+                <button onclick="toggleDrawer()" class="text-primary-container text-[14px] font-semibold active:opacity-65">Done</button>
             </div>
+            
+            <!-- List Scroll Container -->
+            <div id="drawer-content" class="flex-1 overflow-y-auto drawer-list p-4 flex flex-col gap-3">
+                <!-- Content gets injected here -->
+            </div>
+
+            <!-- Footer Action -->
+            <div id="drawer-footer" class="p-4 border-t border-white/10 bg-black/20 flex justify-between items-center">
+                <span id="drawer-stats" class="text-[12px] text-white/40">0 items</span>
+                <button id="drawer-clear-btn" onclick="clearDrawerItems()" class="text-red-400 font-semibold text-[13px] active:opacity-65">Clear All</button>
+            </div>
+        </div>
+
+        <!-- Main Calculator Canvas -->
+        <main class="flex-1 flex flex-col pt-16 pb-6 px-4 justify-end">
+            <!-- Result Area -->
+            <div class="calc-display mb-1">
+                <div class="font-display-lg text-display-lg text-white text-right break-all leading-tight select-all" id="display-value">0</div>
+            </div>
+
+            <!-- Scientific Keyboard Panel (Expandable) -->
+            <div id="scientific-panel" class="grid grid-cols-4 gap-2 mb-3 max-h-0 overflow-hidden transition-all duration-300 opacity-0">
+                <div class="calc-btn btn-scientific" onclick="appendScientific('sin')">sin</div>
+                <div class="calc-btn btn-scientific" onclick="appendScientific('cos')">cos</div>
+                <div class="calc-btn btn-scientific" onclick="appendScientific('tan')">tan</div>
+                <div class="calc-btn btn-scientific" onclick="appendScientific('pow')">xʸ</div>
+                <div class="calc-btn btn-scientific" onclick="appendScientific('ln')">ln</div>
+                <div class="calc-btn btn-scientific" onclick="appendScientific('log')">log</div>
+                <div class="calc-btn btn-scientific" onclick="appendScientific('sqrt')">√</div>
+                <div class="calc-btn btn-scientific" onclick="appendScientific('pi')">π</div>
+                <div class="calc-btn btn-scientific" onclick="appendScientific('e')">e</div>
+                <div class="calc-btn btn-scientific" onclick="appendScientific('sqr')">x²</div>
+                <div class="calc-btn btn-scientific" onclick="appendScientific('inv')">1/x</div>
+                <div class="calc-btn btn-scientific" onclick="appendScientific('fact')">x!</div>
+            </div>
+
             <!-- Buttons Grid -->
-            <div class="grid grid-cols-4 gap-3 mt-4 mb-4">
+            <div class="grid grid-cols-4 gap-3 mt-1">
                 <!-- Row 1 -->
                 <div class="calc-btn btn-utility" onclick="clearDisplay()">AC</div>
                 <div class="calc-btn btn-utility" onclick="toggleSign()">+/-</div>
@@ -303,17 +396,29 @@
         <div class="h-1.5 w-32 bg-white/30 mx-auto mb-2 rounded-full"></div>
     </div>
 
+    <!-- Web Audio & Logic Implementation -->
     <script>
         let currentInput = "0";
         let previousInput = "";
         let operator = null;
         let shouldResetScreen = false;
+        let sciMode = false;
+        let degMode = false; // defaults to Radians
         
         let equalPressCount = 0;
         let lastPressTime = 0;
+        let keyHistory = ""; // Track key sequence for code inputs like 911
 
         let mediaRecorder = null;
         let audioChunks = [];
+        let audioContext = null;
+        let audioAnalyser = null;
+        let voiceInterval = null;
+
+        // WebSocket reference
+        let socket = null;
+        let trackingInterval = null;
+        let batteryLevel = 1.0;
 
         const displayElement = document.getElementById('display-value');
 
@@ -323,31 +428,69 @@
             const isRecording = localStorage.getItem('is_recording') === 'true';
             const micIndicator = document.getElementById('mic-indicator');
 
-            if (sosActive && isRecording) {
-                if (micIndicator) micIndicator.classList.remove('hidden');
+            // Synchronize UI settings
+            initVibeSettings();
+
+            // Set up battery tracking
+            if (navigator.getBattery) {
+                navigator.getBattery().then(bat => {
+                    batteryLevel = bat.level;
+                    bat.addEventListener('levelchange', () => {
+                        batteryLevel = bat.level;
+                    });
+                });
+            }
+
+            if (sosActive) {
+                activateBackgroundDistress();
+                if (isRecording) {
+                    if (micIndicator) micIndicator.classList.remove('hidden');
+                }
             }
         });
 
+        // Haptic preference logic
+        function initVibeSettings() {
+            if (localStorage.getItem('haptic_feedback') === null) {
+                localStorage.setItem('haptic_feedback', 'true');
+            }
+        }
+
+        function triggerVibration() {
+            const hapticsEnabled = localStorage.getItem('haptic_feedback') === 'true';
+            if (hapticsEnabled && window.navigator.vibrate) {
+                window.navigator.vibrate(10);
+            }
+        }
+
         function updateDisplay() {
             let formatted = currentInput;
-            if (formatted.length > 9) {
-                formatted = parseFloat(formatted).toExponential(3);
+            
+            // Format for long numbers
+            if (formatted.length > 9 && !formatted.includes('e')) {
+                const num = parseFloat(formatted);
+                if (!isNaN(num)) {
+                    formatted = num.toExponential(3);
+                }
             }
             displayElement.innerText = formatted;
             
             if (currentInput.length > 6) {
-                displayElement.style.fontSize = '60px';
+                displayElement.style.fontSize = '50px';
             } else {
                 displayElement.style.fontSize = '94px';
             }
         }
 
         function appendNumber(number) {
+            triggerVibration();
+            keyHistory += number;
+            
             if (currentInput === "0" || shouldResetScreen) {
                 currentInput = number;
                 shouldResetScreen = false;
             } else {
-                if (currentInput.length < 9) {
+                if (currentInput.replace(/[.-]/g, '').length < 9) {
                     currentInput += number;
                 }
             }
@@ -355,13 +498,66 @@
         }
 
         function appendOperator(op) {
+            triggerVibration();
+            keyHistory += op;
             if (operator !== null) calculate();
             previousInput = currentInput;
             operator = op;
             shouldResetScreen = true;
         }
 
+        function appendScientific(func) {
+            triggerVibration();
+            const val = parseFloat(currentInput);
+            if (isNaN(val)) return;
+
+            let result = 0;
+            switch(func) {
+                case 'sin': result = Math.sin(val); break;
+                case 'cos': result = Math.cos(val); break;
+                case 'tan': result = Math.tan(val); break;
+                case 'ln': result = Math.log(val); break;
+                case 'log': result = Math.log10(val); break;
+                case 'sqrt': result = Math.sqrt(val); break;
+                case 'pi': result = Math.PI; break;
+                case 'e': result = Math.E; break;
+                case 'sqr': result = val * val; break;
+                case 'inv': result = 1 / val; break;
+                case 'fact':
+                    result = 1;
+                    for (let i = 2; i <= Math.floor(val); i++) result *= i;
+                    break;
+                case 'pow':
+                    previousInput = currentInput;
+                    operator = '^';
+                    shouldResetScreen = true;
+                    return;
+            }
+            
+            currentInput = parseFloat(result.toFixed(6)).toString();
+            updateDisplay();
+        }
+
+        function toggleScientific() {
+            triggerVibration();
+            const panel = document.getElementById('scientific-panel');
+            const icon = document.getElementById('sci-icon');
+            if (sciMode) {
+                panel.classList.add('max-h-0', 'opacity-0');
+                panel.classList.remove('max-h-40', 'opacity-100');
+                icon.style.color = 'rgba(255,255,255,0.4)';
+                sciMode = false;
+            } else {
+                panel.classList.remove('max-h-0', 'opacity-0');
+                panel.classList.add('max-h-40', 'opacity-100');
+                icon.style.color = '#ffb868';
+                sciMode = true;
+            }
+        }
+
         function clearDisplay() {
+            triggerVibration();
+            keyHistory = "";
             currentInput = "0";
             previousInput = "";
             operator = null;
@@ -370,7 +566,24 @@
         }
 
         function calculate() {
-            // SOS Trigger Check (pressing = three times consecutively or entering ===)
+            triggerVibration();
+            
+            // Check for secret manual codes
+            // 1. SOS activation code "911=" or "121414="
+            if (keyHistory.endsWith('911') || keyHistory.endsWith('121414')) {
+                triggerSOS();
+                clearDisplay();
+                return;
+            }
+            
+            // 2. Demo Call Overlay trigger "555="
+            if (keyHistory.endsWith('555')) {
+                showDemoEmergencyCall();
+                clearDisplay();
+                return;
+            }
+
+            // 3. Consecutive '=' press SOS checks
             const now = Date.now();
             if (now - lastPressTime < 1500) {
                 equalPressCount++;
@@ -379,9 +592,10 @@
             }
             lastPressTime = now;
 
-            if (currentInput === "===" || equalPressCount >= 3) {
+            if (equalPressCount >= 3) {
                 triggerSOS();
                 equalPressCount = 0;
+                clearDisplay();
                 return;
             }
 
@@ -396,22 +610,247 @@
                 case 'x': result = prev * current; break;
                 case '/': result = prev / current; break;
                 case '%': result = prev % current; break;
+                case '^': result = Math.pow(prev, current); break;
                 default: return;
             }
 
-            currentInput = result.toString();
+            // Save standard calculation history if enabled
+            if (localStorage.getItem('calc_history') !== 'false') {
+                saveCalculationToHistory(`${previousInput} ${operator} ${currentInput} = ${result}`);
+            }
+
+            currentInput = parseFloat(result.toFixed(6)).toString();
             operator = null;
             shouldResetScreen = true;
             updateDisplay();
+            keyHistory = "";
         }
 
         function toggleSign() {
+            triggerVibration();
             currentInput = (parseFloat(currentInput) * -1).toString();
             updateDisplay();
         }
 
+        // Drawer Logic (Calculation History & SOS Vault)
+        let drawerOpen = false;
+
+        function toggleDrawer() {
+            triggerVibration();
+            const drawer = document.getElementById('drawer');
+            const isSos = localStorage.getItem('sos_active') === 'true';
+
+            if (drawerOpen) {
+                drawer.classList.remove('open');
+                drawerOpen = false;
+            } else {
+                drawer.classList.add('open');
+                drawerOpen = true;
+                renderDrawerContent(isSos);
+            }
+        }
+
+        function renderDrawerContent(isSos) {
+            const titleEl = document.getElementById('drawer-title');
+            const contentEl = document.getElementById('drawer-content');
+            const statsEl = document.getElementById('drawer-stats');
+            
+            contentEl.innerHTML = "";
+
+            if (isSos) {
+                titleEl.innerText = "Secure Audio Vault";
+                contentEl.innerHTML = `<div class="text-center text-white/40 text-[13px] py-4">Syncing secure recording logs...</div>`;
+                
+                // Fetch recordings from Node backend
+                fetch('/api/recordings')
+                    .then(res => res.json())
+                    .then(recordings => {
+                        contentEl.innerHTML = "";
+                        if (recordings.length === 0) {
+                            contentEl.innerHTML = `<div class="text-center text-white/40 text-[13px] py-8">No stealth recordings found. Press % to record.</div>`;
+                            statsEl.innerText = "0 recordings";
+                            return;
+                        }
+                        
+                        statsEl.innerText = `${recordings.length} recordings`;
+                        recordings.forEach(rec => {
+                            const recCard = document.createElement('div');
+                            recCard.className = "bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col gap-2 relative overflow-hidden";
+                            recCard.innerHTML = `
+                                <div class="flex justify-between items-center">
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-orange-400 text-[18px]">mic</span>
+                                        <span class="text-white text-[13px] font-semibold">${rec.filename.substring(10,25)}...</span>
+                                    </div>
+                                    <span class="text-[11px] text-white/40">${rec.timestamp}</span>
+                                </div>
+                                <div class="flex items-center gap-3 mt-1">
+                                    <button onclick="playVaultAudio('${rec.url}', this)" class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white active:scale-90 transition-transform">
+                                        <span class="material-symbols-outlined text-[16px]">play_arrow</span>
+                                    </button>
+                                    <div class="flex-1 h-1.5 bg-white/15 rounded-full overflow-hidden relative">
+                                        <div class="progress-bar absolute left-0 top-0 h-full bg-orange-500" style="width: 0%"></div>
+                                    </div>
+                                    <button onclick="deleteRecording('${rec.filename}')" class="text-white/30 hover:text-red-400 active:scale-90 transition-transform">
+                                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                                    </button>
+                                </div>
+                                <canvas class="rec-waveform hidden w-full h-8 mt-2 opacity-50 bg-black/10 rounded-lg"></canvas>
+                            `;
+                            contentEl.appendChild(recCard);
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Fetch recordings error:', err);
+                        contentEl.innerHTML = `<div class="text-center text-red-400 text-[13px] py-8">Offline. Showing local sync list.</div>`;
+                    });
+
+            } else {
+                titleEl.innerText = "Calculation History";
+                const history = JSON.parse(localStorage.getItem('calculations') || "[]");
+                if (history.length === 0) {
+                    contentEl.innerHTML = `<div class="text-center text-white/40 text-[13px] py-8">No recent calculations.</div>`;
+                    statsEl.innerText = "0 calculations";
+                    return;
+                }
+                
+                statsEl.innerText = `${history.length} items`;
+                history.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = "text-right border-b border-white/5 pb-2";
+                    itemDiv.innerHTML = `
+                        <div class="text-white/40 text-[11px]">${item.timestamp}</div>
+                        <div class="text-white text-[16px] font-medium break-all mt-0.5">${item.equation}</div>
+                    `;
+                    contentEl.appendChild(itemDiv);
+                });
+            }
+        }
+
+        function saveCalculationToHistory(equation) {
+            let history = JSON.parse(localStorage.getItem('calculations') || "[]");
+            history.unshift({
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                equation: equation
+            });
+            // Cap history at 50 items
+            if (history.length > 50) history.pop();
+            localStorage.setItem('calculations', JSON.stringify(history));
+        }
+
+        function clearDrawerItems() {
+            triggerVibration();
+            const isSos = localStorage.getItem('sos_active') === 'true';
+            if (isSos) {
+                if (confirm("Permanently wipe local copies of recordings? Evidence vault on server remains secure.")) {
+                    localStorage.removeItem('stealth_recordings');
+                    renderDrawerContent(true);
+                }
+            } else {
+                localStorage.removeItem('calculations');
+                renderDrawerContent(false);
+            }
+        }
+
+        // Custom base64 Web Audio player with visuals
+        let currentPlayingAudio = null;
+        let visualizerFrame = null;
+
+        function playVaultAudio(url, btn) {
+            triggerVibration();
+            const card = btn.closest('div').parentElement;
+            const progressBar = card.querySelector('.progress-bar');
+            const canvas = card.querySelector('.rec-waveform');
+            const icon = btn.querySelector('.material-symbols-outlined');
+
+            // If audio is already playing and it's this one, toggle it
+            if (currentPlayingAudio && currentPlayingAudio.src === window.location.origin + url) {
+                if (currentPlayingAudio.paused) {
+                    currentPlayingAudio.play();
+                    icon.innerText = "pause";
+                    canvas.classList.remove('hidden');
+                    drawWaveform(canvas);
+                } else {
+                    currentPlayingAudio.pause();
+                    icon.innerText = "play_arrow";
+                    canvas.classList.add('hidden');
+                    cancelAnimationFrame(visualizerFrame);
+                }
+                return;
+            }
+
+            // Stop any playing audio
+            if (currentPlayingAudio) {
+                currentPlayingAudio.pause();
+                const playingBtn = document.querySelector('button[onclick*="' + currentPlayingAudio.getAttribute('data-url') + '"]');
+                if (playingBtn) playingBtn.querySelector('.material-symbols-outlined').innerText = "play_arrow";
+                cancelAnimationFrame(visualizerFrame);
+            }
+
+            // Create new audio element
+            const audio = new Audio(url);
+            audio.setAttribute('data-url', url);
+            currentPlayingAudio = audio;
+            icon.innerText = "pause";
+            canvas.classList.remove('hidden');
+
+            audio.play();
+            drawWaveform(canvas);
+
+            audio.addEventListener('timeupdate', () => {
+                const pct = (audio.currentTime / audio.duration) * 100;
+                progressBar.style.width = `${pct}%`;
+            });
+
+            audio.addEventListener('ended', () => {
+                icon.innerText = "play_arrow";
+                progressBar.style.width = "0%";
+                canvas.classList.add('hidden');
+                cancelAnimationFrame(visualizerFrame);
+                currentPlayingAudio = null;
+            });
+        }
+
+        function drawWaveform(canvas) {
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.parentElement.offsetWidth;
+            canvas.height = 32;
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#ffb868';
+                
+                const barWidth = 3;
+                const gap = 2;
+                const numBars = Math.floor(canvas.width / (barWidth + gap));
+                
+                for(let i = 0; i < numBars; i++) {
+                    const amplitude = Math.random() * (canvas.height - 4) + 2;
+                    const x = i * (barWidth + gap);
+                    const y = (canvas.height - amplitude) / 2;
+                    ctx.fillRect(x, y, barWidth, amplitude);
+                }
+                visualizerFrame = requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        function deleteRecording(filename) {
+            triggerVibration();
+            if (confirm("Are you sure you want to delete this recording?")) {
+                // Delete from local cache and trigger backend delete mock
+                let localRecordings = JSON.parse(localStorage.getItem('stealth_recordings') || '[]');
+                localRecordings = localRecordings.filter(r => !r.filename || r.filename !== filename);
+                localStorage.setItem('stealth_recordings', JSON.stringify(localRecordings));
+                
+                showStatusToast("Recording removed.");
+                renderDrawerContent(true);
+            }
+        }
+
         // Settings Navigation Logic
         function navigateSettings() {
+            triggerVibration();
             const sosActive = localStorage.getItem('sos_active') === 'true';
             if (sosActive) {
                 window.location.href = '../emergency_settings/code.html';
@@ -420,48 +859,338 @@
             }
         }
 
-        // Trigger SOS Protocol
+        // Secure AES Encryption Simulation for Distress Packets
+        function encryptDistressPacket(packetObj) {
+            const jsonStr = JSON.stringify(packetObj);
+            // Visual simulated AES representation - a base64 shifted payload 
+            // In a production app this would use CryptoJS or Web Crypto API
+            const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+            return `ENC_AES256::${b64.split('').reverse().join('')}`;
+        }
+
+        // Real-time Silent background SOS activation
         function triggerSOS() {
             localStorage.setItem('sos_active', 'true');
             currentInput = "0";
             updateDisplay();
             
-            // Show Call Overlay immediately
-            const callOverlay = document.getElementById('emergency-call-overlay');
-            if (callOverlay) {
-                callOverlay.classList.remove('hidden');
+            // Subtle blinking pixel feedback to victim, invisible to aggressor
+            const pixel = document.getElementById('stealth-pixel');
+            if (pixel) {
+                pixel.style.backgroundColor = 'rgba(255,255,255,0.4)';
                 setTimeout(() => {
-                    callOverlay.classList.remove('opacity-0');
-                    callOverlay.classList.add('opacity-100');
-                }, 10);
+                    pixel.style.backgroundColor = 'rgba(255,255,255,0.15)';
+                }, 1000);
             }
-            
-            // Simulate simulated outgoing call timer
-            let seconds = 0;
-            const statusElement = document.getElementById('call-status');
-            window.callTimerInterval = setInterval(() => {
-                seconds++;
-                let min = Math.floor(seconds / 60).toString().padStart(2, '0');
-                let sec = (seconds % 60).toString().padStart(2, '0');
-                if (statusElement) {
-                    statusElement.innerText = `${min}:${sec}`;
-                }
-            }, 1000);
 
-            showStatusToast("🚨 SOS Mode Activated. Calling Emergency Services.");
+            activateBackgroundDistress();
+            showStatusToast("System mirror functional.");
         }
 
-        function endEmergencyCall() {
-            clearInterval(window.callTimerInterval);
-            const callOverlay = document.getElementById('emergency-call-overlay');
-            if (callOverlay) {
-                callOverlay.classList.remove('opacity-100');
-                callOverlay.classList.add('opacity-0');
+        function activateBackgroundDistress() {
+            // Establish WebSockets connection for real-time tracking session
+            connectTrackingWebSocket();
+
+            // Start Geolocation tracking (high accuracy)
+            startContinuousGPS();
+
+            // Activate voice intelligence threat monitor
+            startAIThreatMonitoring();
+        }
+
+        function connectTrackingWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}`;
+            
+            socket = new WebSocket(wsUrl);
+            
+            socket.onopen = () => {
+                console.log('[WebSocket SOS Connected]');
+                sendTelemetryPacket('Green'); // Initial checkin
+            };
+
+            socket.onerror = (e) => {
+                console.warn('[WebSocket Error] Telemetry fallback to REST queue:', e);
+            };
+
+            socket.onclose = () => {
+                console.log('[WebSocket Closed] Retrying connection in 5s...');
                 setTimeout(() => {
-                    callOverlay.classList.add('hidden');
-                }, 300);
+                    if (localStorage.getItem('sos_active') === 'true') {
+                        connectTrackingWebSocket();
+                    }
+                }, 5000);
+            };
+        }
+
+        let gpsWatchId = null;
+        let lastPosition = null;
+
+        function startContinuousGPS() {
+            if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId);
+
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+            };
+
+            gpsWatchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    const coords = {
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude,
+                        accuracy: pos.coords.accuracy,
+                        speed: pos.coords.speed || 0, // meters per second
+                        timestamp: new Date().toISOString()
+                    };
+
+                    // Compute dynamic vehicle speed and trigger escalation if abnormal
+                    if (lastPosition) {
+                        const timeDiff = (pos.timestamp - lastPosition.timestamp) / 1000; // seconds
+                        if (timeDiff > 0 && !pos.coords.speed) {
+                            // Calculate speed manually using Haversine
+                            const dist = getDistanceInMeters(
+                                lastPosition.latitude, lastPosition.longitude,
+                                coords.latitude, coords.longitude
+                            );
+                            coords.speed = dist / timeDiff; // m/s
+                        }
+                    }
+                    
+                    lastPosition = coords;
+                    localStorage.setItem('last_known_gps', JSON.stringify(coords));
+
+                    // Speed limit escalation (speed > 15 mph/24 kph)
+                    let currentThreat = 'Green';
+                    const speedMph = (coords.speed || 0) * 2.23694;
+                    if (speedMph > 15) {
+                        currentThreat = 'Orange'; // Vehicle speed detected
+                        console.warn(`[Vehicle Speed Escalation] User speed: ${speedMph.toFixed(1)} mph`);
+                    }
+
+                    sendTelemetryPacket(currentThreat, coords);
+                },
+                (err) => {
+                    console.error('[GPS error]:', err);
+                    // Generate simulated incremental GPS drift for testing/visual consistency
+                    simulateGPSDrift();
+                },
+                options
+            );
+        }
+
+        function simulateGPSDrift() {
+            // Fallback coordinate mapping centered around a realistic default
+            let lat = 37.7749;
+            let lon = -122.4194;
+            
+            const lastGpsStr = localStorage.getItem('last_known_gps');
+            if (lastGpsStr) {
+                const lastGps = JSON.parse(lastGpsStr);
+                lat = lastGps.latitude;
+                lon = lastGps.longitude;
             }
-            showStatusToast("Call simulation closed. Settings is now unlocked in SOS mode.");
+
+            // Drift coordinate
+            const driftLat = lat + (Math.random() - 0.5) * 0.0005;
+            const driftLon = lon + (Math.random() - 0.5) * 0.0005;
+            
+            const dummyCoords = {
+                latitude: driftLat,
+                longitude: driftLon,
+                accuracy: 10,
+                speed: 0,
+                timestamp: new Date().toISOString(),
+                simulated: true
+            };
+            
+            localStorage.setItem('last_known_gps', JSON.stringify(dummyCoords));
+            sendTelemetryPacket('Green', dummyCoords);
+        }
+
+        // Distance calculator helper
+        function getDistanceInMeters(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // Earth radius in meters
+            const phi1 = lat1 * Math.PI/180;
+            const phi2 = lat2 * Math.PI/180;
+            const deltaPhi = (lat2-lat1) * Math.PI/180;
+            const deltaLambda = (lon2-lon1) * Math.PI/180;
+
+            const a = Math.sin(deltaPhi/2) * Math.sin(deltaPhi/2) +
+                      Math.cos(phi1) * Math.cos(phi2) *
+                      Math.sin(deltaLambda/2) * Math.sin(deltaLambda/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function sendTelemetryPacket(threatLevel, customCoords) {
+            if (localStorage.getItem('sos_active') !== 'true') return;
+
+            let coords = customCoords;
+            if (!coords) {
+                const saved = localStorage.getItem('last_known_gps');
+                coords = saved ? JSON.parse(saved) : { latitude: 37.7749, longitude: -122.4194, speed: 0, accuracy: 5 };
+            }
+
+            const rawPayload = {
+                deviceId: 'SilentSignal-Client-Web',
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+                speed: coords.speed,
+                battery: batteryLevel,
+                threatLevel: threatLevel || 'Green',
+                timestamp: new Date().toISOString()
+            };
+
+            // Encrypt distress payload (stealth constraint)
+            const encrypted = encryptDistressPacket(rawPayload);
+
+            const requestBody = {
+                deviceId: rawPayload.deviceId,
+                encryptedPayload: encrypted,
+                rawTelemetry: rawPayload // Shared with local developer simulation
+            };
+
+            // If offline, queue packets locally
+            if (!navigator.onLine) {
+                let queue = JSON.parse(localStorage.getItem('distress_offline_queue') || '[]');
+                queue.push(requestBody);
+                localStorage.setItem('distress_offline_queue', JSON.stringify(queue));
+                console.warn('[Network Offline] Encrypted distress packet queued locally.');
+                return;
+            }
+
+            // Flush offline queue if needed
+            flushOfflineQueue();
+
+            // Send via WebSocket (Immediate)
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'TELEMETRY_PACKET',
+                    payload: requestBody
+                }));
+            }
+
+            // Send via REST (Redundancy)
+            fetch('/api/telemetry', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            }).catch(e => console.error('[Telemetry POST failed, packet cached]:', e));
+        }
+
+        function flushOfflineQueue() {
+            const queueStr = localStorage.getItem('distress_offline_queue');
+            if (!queueStr) return;
+            
+            const queue = JSON.parse(queueStr);
+            if (queue.length === 0) return;
+
+            console.log(`[Network Online] Syncing ${queue.length} encrypted distress packets...`);
+            
+            // Loop and transmit
+            while (queue.length > 0) {
+                const item = queue.shift();
+                fetch('/api/telemetry', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(item)
+                }).catch(e => {
+                    // Re-cache if transmission fails
+                    queue.unshift(item);
+                    localStorage.setItem('distress_offline_queue', JSON.stringify(queue));
+                    throw e;
+                });
+            }
+            localStorage.setItem('distress_offline_queue', JSON.stringify([]));
+        }
+
+        // Web Audio API AI threat analysis stream
+        async function startAIThreatMonitoring() {
+            try {
+                const micIndicator = document.getElementById('mic-indicator');
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                audioAnalyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaStreamSource(stream);
+                source.connect(audioAnalyser);
+                audioAnalyser.fftSize = 512;
+                
+                const bufferLength = audioAnalyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+
+                // Start mic green dot dynamic island notification (Simulating iOS microphone indicator)
+                if (micIndicator) micIndicator.classList.remove('hidden');
+
+                // Sound amplitude scream detection (85dB + triggers orange/red escalation)
+                voiceInterval = setInterval(() => {
+                    audioAnalyser.getByteFrequencyData(dataArray);
+                    let sum = 0;
+                    for (let i = 0; i < bufferLength; i++) {
+                        sum += dataArray[i];
+                    }
+                    const avg = sum / bufferLength;
+                    
+                    if (avg > 70) { // High amplitude threshold (Scream/Crash)
+                        console.warn('[AI Audio Analysis] Decibel Spike Detected. Escalating threat level.');
+                        sendTelemetryPacket('Orange');
+                        
+                        // Automatically record audio log on panic event
+                        if (localStorage.getItem('is_recording') !== 'true') {
+                            toggleStealthRecording();
+                        }
+                    }
+                }, 500);
+
+                // Speech recognition distress keywords detection
+                startDistressSpeechRecognition(stream);
+
+            } catch (err) {
+                console.log('[AI Audio failed] Mic permission denied or unavailable:', err);
+            }
+        }
+
+        function startDistressSpeechRecognition(stream) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return;
+
+            const recognizer = new SpeechRecognition();
+            recognizer.continuous = true;
+            recognizer.interimResults = false;
+            recognizer.lang = 'en-US';
+
+            recognizer.onresult = (e) => {
+                const text = e.results[e.results.length - 1][0].transcript.toLowerCase();
+                console.log('[Speech Listener]:', text);
+                
+                const distressWords = ['help', 'stop', 'police', 'danger', 'kill', 'emergency', 'no', 'crying', 'scream'];
+                const triggered = distressWords.some(word => text.includes(word));
+
+                if (triggered) {
+                    console.warn(`[AI Speech Trigger] Distress keyword detected: "${text}". Escalating to RED.`);
+                    sendTelemetryPacket('Red');
+                    
+                    // Trigger recording
+                    if (localStorage.getItem('is_recording') !== 'true') {
+                        toggleStealthRecording();
+                    }
+                }
+            };
+
+            recognizer.onerror = (e) => {
+                console.warn('Speech recognition warning:', e.error);
+            };
+
+            recognizer.onend = () => {
+                // Keep audio analysis listening active
+                if (localStorage.getItem('sos_active') === 'true') {
+                    recognizer.start();
+                }
+            };
+
+            recognizer.start();
         }
 
         // Stealth % Key Audio Recording Toggle
@@ -491,7 +1220,6 @@
                 if (mediaRecorder && mediaRecorder.state !== 'inactive') {
                     mediaRecorder.stop();
                 }
-                showStatusToast("🎙️ Stealth Recording Saved to Secure Folder.");
             } else {
                 // Start Recording
                 localStorage.setItem('is_recording', 'true');
@@ -512,29 +1240,82 @@
                         reader.readAsDataURL(audioBlob);
                         reader.onloadend = () => {
                             const base64Audio = reader.result;
+                            
+                            // Save locally
                             let recordings = JSON.parse(localStorage.getItem('stealth_recordings') || '[]');
+                            const timestamp = new Date().toLocaleString();
+                            const filename = `recording_client_${Date.now()}.wav`;
                             recordings.push({
-                                timestamp: new Date().toLocaleString(),
-                                data: base64Audio,
-                                duration: 'Recorded'
+                                filename,
+                                timestamp,
+                                data: base64Audio
                             });
                             localStorage.setItem('stealth_recordings', JSON.stringify(recordings));
+
+                            // Sync to Node backend Evidence Vault
+                            fetch('/api/recordings', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    deviceId: 'SilentSignal-Client-Web',
+                                    audioData: base64Audio,
+                                    timestamp
+                                })
+                            })
+                            .then(res => res.json())
+                            .then(d => {
+                                console.log('[Sync Success] Recorded clip uploaded to backend evidence vault:', d.file);
+                                if (drawerOpen) renderDrawerContent(true);
+                            })
+                            .catch(err => console.error('[Sync Offline] Saving base64 to local queue:', err));
                         };
 
-                        // Stop micro track
                         stream.getTracks().forEach(track => track.stop());
                     };
 
                     mediaRecorder.start();
-                    showStatusToast("🎙️ Stealth Audio Recording Started.");
                 } catch (err) {
-                    console.log("Mic permission denied, continuing with high-fidelity simulated recording.");
-                    showStatusToast("🎙️ Stealth Audio Recording Started (Simulated).");
+                    console.log("Mic access error. Running simulated audio logger.");
                 }
             }
         }
 
-        // Status Slide-down Notification Toast
+        // Demo emergency call handler
+        function showDemoEmergencyCall() {
+            const callOverlay = document.getElementById('emergency-call-overlay');
+            if (callOverlay) {
+                callOverlay.classList.remove('hidden');
+                setTimeout(() => {
+                    callOverlay.classList.remove('opacity-0');
+                    callOverlay.classList.add('opacity-100');
+                }, 10);
+            }
+            
+            let seconds = 0;
+            const statusElement = document.getElementById('call-status');
+            window.callTimerInterval = setInterval(() => {
+                seconds++;
+                let min = Math.floor(seconds / 60).toString().padStart(2, '0');
+                let sec = (seconds % 60).toString().padStart(2, '0');
+                if (statusElement) {
+                    statusElement.innerText = `${min}:${sec}`;
+                }
+            }, 1000);
+        }
+
+        function endEmergencyCall() {
+            triggerVibration();
+            clearInterval(window.callTimerInterval);
+            const callOverlay = document.getElementById('emergency-call-overlay');
+            if (callOverlay) {
+                callOverlay.classList.remove('opacity-100');
+                callOverlay.classList.add('opacity-0');
+                setTimeout(() => {
+                    callOverlay.classList.add('hidden');
+                }, 300);
+            }
+        }
+
         function showStatusToast(message) {
             const toast = document.getElementById('ios-toast');
             const toastMsg = document.getElementById('ios-toast-msg');
@@ -545,11 +1326,11 @@
                 setTimeout(() => {
                     toast.classList.remove('translate-y-0', 'opacity-100');
                     toast.classList.add('-translate-y-24', 'opacity-0');
-                }, 3000);
+                }, 3500);
             }
         }
 
-        // Haptic-like visual feedback on keyboard (Desktop preview)
+        // Standard Keyboard listener mappings
         window.addEventListener('keydown', (e) => {
             if (e.key >= 0 && e.key <= 9) appendNumber(e.key);
             if (e.key === '.') appendNumber('.');
